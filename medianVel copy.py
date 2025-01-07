@@ -13,7 +13,6 @@ def read_yolo_file(file_path):
             parts = line.strip().split()
             y_center = float(parts[2])  # The third element is the y-center
             y_centers.append(y_center)
-            # print(y_center)
     return y_centers
 
 def find_peaks_and_troughs(y_centers):
@@ -106,21 +105,24 @@ def convert_to_mm_per_sec(negative, positive, fps, calibration):
     positive = positive * .001
     return negative, positive
 
-def main(directory_path):
+def main():
     """Main function to read files and plot y-centers."""
     y_centers_all_frames = []
 
-    files = sorted(os.listdir(directory_path))
+    OUTPUT = 'output'
 
-    for file_name in files:
-        if file_name.endswith('.txt'):
-            file_path = os.path.join(directory_path, file_name)
-            y_centers = read_yolo_file(file_path)
-            # Append all y-centers from each file to a single list
-            y_centers_all_frames.extend(y_centers)
+    for filename in os.listdir(OUTPUT):
+        print(filename)
 
-    find_peaks_and_troughs(y_centers_all_frames)
+        files = sorted(os.listdir(os.path.join(OUTPUT, filename)))
 
-# Example usage:
-directory_path = '/Users/calebchristian/Desktop/2024-07-02 10-42-43Lbl'
-main(directory_path)
+        for file_name in files:
+            if file_name.endswith('.txt'):
+                file_path = os.path.join(OUTPUT, filename, file_name)
+                y_centers = read_yolo_file(file_path)
+                # Append all y-centers from each file to a single list
+                y_centers_all_frames.extend(y_centers)
+
+        find_peaks_and_troughs(y_centers_all_frames)
+
+main()
