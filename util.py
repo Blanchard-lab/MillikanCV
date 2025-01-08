@@ -1,20 +1,39 @@
 import cv2
-import os
+import numpy as np
 
 def extract_video_properties(video):
     total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    display_width = 640
-    display_height = int(display_width * (frame_height / frame_width))
+    return total_frames, frame_width, frame_height
 
-    return total_frames, frame_width, frame_height, display_width, display_height
+def find_slopes(peaks, troughs):
+    points = sorted(peaks + troughs, key=lambda x: x[0])
 
-def save_yolo_format(frame_num, bbox, img_width, img_height, base_output_path):
-    x_center = (bbox[0] + bbox[2] / 2) / img_width
-    y_center = (bbox[1] + bbox[3] / 2) / img_height
-    width = bbox[2] / img_width
-    height = bbox[3] / img_height
-    output_path = os.path.join(base_output_path, f"{frame_num:06d}.txt")
-    with open(output_path, 'w') as file:
-        file.write(f"0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
+    # Calculate slopes between consecutive points
+    positive_slopes = []
+    negative_slopes = []
+    for i in range(1, len(points)):
+        x1, y1 = points[i - 1]
+        x2, y2 = points[i]
+        # Calculate slope (delta_y / delta_x)
+        if x2 != x1:  # Prevent division by zero
+            slope = (y2 - y1) / (x2 - x1)
+            if slope > 0:
+                positive_slopes.append(slope)
+            else:
+                negative_slopes.append(slope)
+        else:
+            print("Vertical line detected, slope considered as infinite.")
+
+    # Calculate the median slopes
+    neg_slope_median = np.median(negative_slopes) if negative_slopes else 0
+    pos_slope_median = np.median(positive_slopes) if positive_slopes else 0
+
+    return convert_to_mm_per_sec(neg_slope_median, pos_slope_median, 30, 414.20)
+
+def convert_to_mm_per_sec(negative, positive, fps, calibration):
+    # Convert slopes to mm/s
+    negative = np.abs((negative * fps) / calibration)
+    positive = np.abs((positive * fps) / calibration)
+    return negative * 1e-3, positive * 1e-3  # Convert to m/s
