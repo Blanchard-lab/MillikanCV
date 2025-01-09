@@ -316,7 +316,8 @@ class MillikanExperimentApp:
         self.ax.plot(t, y, label='Y-Center Data', color='black')
         self.ax.plot(t[peaks], y[peaks], 'x', label='Peaks', color='blue')
         self.ax.plot(t[troughs], y[troughs], 'bo', label='Troughs')
-        self.ax.invert_yaxis()  # Invert the y-axis
+        self.ax.invert_yaxis()
+        self.ax.legend()
         self.chart_canvas.draw()
 
     def display_frame(self, frame):
