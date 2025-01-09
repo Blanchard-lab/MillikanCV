@@ -95,6 +95,12 @@ class MillikanExperimentApp:
         self.backward_button = tk.Button(self.controls_frame, text="Backward", command=self.move_backward, state=tk.DISABLED)
         self.backward_button.pack(fill=tk.X, pady=5)
 
+        self.fast_forward_button = tk.Button(self.controls_frame, text="Fast Forward", command=self.move_fast_forward, state=tk.DISABLED)
+        self.fast_forward_button.pack(fill=tk.X, pady=5)
+
+        self.fast_backward_button = tk.Button(self.controls_frame, text="Fast Backward", command=self.move_fast_backward, state=tk.DISABLED)
+        self.fast_backward_button.pack(fill=tk.X, pady=5)
+
         # Slider for video scrubbing
         self.slider = tk.Scale(
             self.video_container,
@@ -192,6 +198,8 @@ class MillikanExperimentApp:
         self.pause_button.config(state=tk.NORMAL)
         self.forward_button.config(state=tk.NORMAL)
         self.backward_button.config(state=tk.NORMAL)
+        self.fast_forward_button.config(state=tk.NORMAL)
+        self.fast_backward_button.config(state=tk.NORMAL)
 
         # Read the first frame
         ret, self.frame = self.video.read()
@@ -393,6 +401,34 @@ class MillikanExperimentApp:
     def move_backward(self):
         if self.current_frame > 0:
             self.current_frame -= 1
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
+            ret, frame = self.video.read()
+            if ret:
+                frame = cv2.resize(frame, (self.display_width, self.display_height))
+                bbox = self.bbox_history.get(self.current_frame, None)
+                if bbox:
+                    p1 = (int(bbox[0]), int(bbox[1]))
+                    p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                    cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+                self.display_frame(frame)
+
+    def move_fast_forward(self):
+        if self.current_frame < self.total_frames - 1:
+            self.current_frame += 10
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
+            ret, frame = self.video.read()
+            if ret:
+                frame = cv2.resize(frame, (self.display_width, self.display_height))
+                bbox = self.bbox_history.get(self.current_frame, None)
+                if bbox:
+                    p1 = (int(bbox[0]), int(bbox[1]))
+                    p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                    cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+                self.display_frame(frame)
+
+    def move_fast_backward(self):
+        if self.current_frame > 0:
+            self.current_frame -= 10
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
             if ret:
