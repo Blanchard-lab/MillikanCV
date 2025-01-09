@@ -173,6 +173,7 @@ class MillikanExperimentApp:
 
     def load_videos(self):
         """Load video files from the directory into the Listbox."""
+        self.highlight_button(self.load_videos_button)
         self.video_listbox.delete(0, tk.END)
         if not os.path.exists(self.video_directory):
             os.makedirs(self.video_directory)
@@ -182,6 +183,7 @@ class MillikanExperimentApp:
 
     def select_video(self):
         """Handle video selection from the Listbox."""
+        self.highlight_button(self.select_video_button)
         selected_index = self.video_listbox.curselection()
         if not selected_index:
             messagebox.showerror("Error", "No video selected.")
@@ -290,11 +292,13 @@ class MillikanExperimentApp:
             self.slider = None  # Remove the reference to the slider
 
     def play_video(self):
+        self.highlight_button(self.play_button)
         self.video_canvas.delete("roi")
         self.paused = False
         self.update_video_frame()
 
     def pause_video(self):
+        self.highlight_button(self.pause_button)
         self.paused = True
 
     def update_video_frame(self):
@@ -403,6 +407,7 @@ class MillikanExperimentApp:
 
     def move_forward(self):
         if self.current_frame < self.total_frames - 1:
+            self.highlight_button(self.forward_button)
             self.current_frame += 1
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -417,6 +422,7 @@ class MillikanExperimentApp:
 
     def move_backward(self):
         if self.current_frame > 0:
+            self.highlight_button(self.backward_button)
             self.current_frame -= 1
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -431,6 +437,7 @@ class MillikanExperimentApp:
 
     def move_fast_forward(self):
         if self.current_frame < self.total_frames - 1:
+            self.highlight_button(self.fast_backward_button)
             self.current_frame += 10
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -445,6 +452,7 @@ class MillikanExperimentApp:
 
     def move_fast_backward(self):
         if self.current_frame > 0:
+            self.highlight_button(self.fast_backward_button)
             self.current_frame -= 10
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -456,6 +464,24 @@ class MillikanExperimentApp:
                     p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
                     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
                 self.display_frame(frame)
+
+    def highlight_button(self, button):
+        # Reset all buttons to their default style
+        buttons = [
+            self.play_button,
+            self.pause_button,
+            self.forward_button,
+            self.backward_button,
+            self.fast_forward_button,
+            self.fast_backward_button,
+        ]
+        for btn in buttons:
+            btn.config(bg="SystemButtonFace", fg="black")  # Default styles for buttons
+
+        # Highlight the selected button
+        button.config(bg="blue", fg="white")
+
+        self.root.after(150, lambda: button.config(bg="SystemButtonFace", fg="black"))
 
     def on_slider_update(self, value):
         if not self.slider:
@@ -522,7 +548,6 @@ class MillikanExperimentApp:
 
         # Redraw the gauge
         self.gauge_chart_canvas.draw()
-
 
     def update_interval_chart(self, charge, interval):
         """Update the histogram for interval observations."""
