@@ -26,8 +26,8 @@ class MillikanExperimentApp:
         self.total_frames = 0
         self.frame_width = 0
         self.frame_height = 0
-        self.display_width = 640 
-        self.display_height = 480
+        self.display_width = 512 
+        self.display_height = 512
 
         self.roi_selection = False
         self.bbox = None
@@ -41,8 +41,6 @@ class MillikanExperimentApp:
         self.video_directory = "input" 
 
         self.y_centers = []
-
-
 
         # GUI Layout
 
@@ -68,7 +66,7 @@ class MillikanExperimentApp:
 
         # Right Frame for the 2x2 grid
         self.right_frame = tk.Frame(root)
-        self.right_frame.pack(side=tk.TOP, expand=True)
+        self.right_frame.pack(side=tk.TOP, fill=tk.BOTH)
 
         # Video display and controls (Top Left)
         self.video_container = tk.Frame(self.right_frame)
@@ -76,13 +74,13 @@ class MillikanExperimentApp:
 
         # Video Canvas
         self.video_canvas = tk.Canvas(self.video_container, width=self.display_width, height=self.display_height, bg="black")
-        self.video_canvas.pack(side=tk.LEFT, padx=5, pady=5)
+        self.video_canvas.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         # Controls Frame
         self.controls_frame = tk.Frame(self.video_container)
-        self.controls_frame.pack(side=tk.RIGHT, padx=0, pady=5)
+        self.controls_frame.grid(row=0, column=1, padx=5, pady=5, sticky="ns")
 
-        # Video Control Buttons (stacked vertically)
+        # Video Control Buttons (stacked vertically in the controls frame)
         self.play_button = tk.Button(self.controls_frame, text="Play", command=self.play_video, state=tk.DISABLED)
         self.play_button.pack(fill=tk.X, pady=5)
 
@@ -104,7 +102,7 @@ class MillikanExperimentApp:
             length=self.display_width,
             command=self.on_slider_update
         )
-        self.slider.pack(side=tk.BOTTOM, padx=5, pady=5)
+        self.slider.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
 
         # Instructions (Top Right)
@@ -132,6 +130,12 @@ class MillikanExperimentApp:
         self.right_frame.grid_rowconfigure(1, weight=1)
         self.right_frame.grid_columnconfigure(0, weight=1)
         self.right_frame.grid_columnconfigure(1, weight=1)
+
+        # Configure the layout for dynamic resizing
+        self.video_container.grid_rowconfigure(0, weight=1)  # Video canvas and controls
+        self.video_container.grid_rowconfigure(1, weight=0)  # Slider
+        self.video_container.grid_columnconfigure(0, weight=1)  # Video canvas
+        self.video_container.grid_columnconfigure(1, weight=0)  # Controls frame
 
     def load_videos(self):
         """Load video files from the directory into the Listbox."""
