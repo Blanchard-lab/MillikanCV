@@ -133,16 +133,20 @@ class MillikanExperimentApp:
         self.prediction_sub_frame = tk.Frame(self.prediction_frame, bg="white")
         self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Circular Gauge for Charge
-        self.gauge_canvas = tk.Canvas(self.prediction_sub_frame, width=200, height=200, bg="white")
-        self.gauge_canvas.pack(side=tk.LEFT, padx=5, pady=10)
+        # Vertical Gauge for Charge
+        self.gauge_figure = Figure(figsize=(2.5, 3), dpi=100)
+        self.gauge_ax = self.gauge_figure.add_subplot(111)
+        self.gauge_chart_canvas = FigureCanvasTkAgg(self.gauge_figure, self.prediction_sub_frame)
+        self.gauge_chart_canvas.get_tk_widget().pack(
+            side=tk.LEFT, padx=5, pady=5, fill=tk.BOTH, expand=False,
+        )
 
         # Interval Scatter Plot Chart
-        self.interval_figure = Figure(figsize=(4, 1), dpi=100)  # Reduced figure size
+        self.interval_figure = Figure(figsize=(3, 1), dpi=100) 
         self.interval_ax = self.interval_figure.add_subplot(111)
         self.interval_chart_canvas = FigureCanvasTkAgg(self.interval_figure, self.prediction_sub_frame)
         self.interval_chart_canvas.get_tk_widget().pack(
-            side=tk.RIGHT, padx=5, pady=10, fill=tk.BOTH, expand=False  # Added padding
+            side=tk.RIGHT, padx=5, pady=5, fill=tk.BOTH, expand=False 
         )
 
         # Configure row and column weights for dynamic resizing
@@ -240,7 +244,8 @@ class MillikanExperimentApp:
         self.progress_bar['value'] = 0
         self.ax.clear()
         self.chart_canvas.draw()
-        self.gauge_canvas.delete("all")
+        self.gauge_ax.clear()
+        self.gauge_chart_canvas.draw()
         self.interval_ax.clear()
         self.interval_chart_canvas.draw()
 
@@ -354,11 +359,7 @@ class MillikanExperimentApp:
             vu, vd = find_slopes(peak_points, trough_points)
             charge, interval = self.charge_calculator.find_charge_and_interval(vu, vd)
             self.update_prediction_display(charge, interval)
-            # self.prediction_label.config(
-            #     text=f"Charge Prediction:\nCharge: {charge:.5e} C\nInterval: {interval:.2f} e"
-            # )
         except ValueError as e:
-            # self.prediction_label.config(text=f"Error in calculation: {str(e)}")
             pass
 
         # Plotting
@@ -464,60 +465,39 @@ class MillikanExperimentApp:
         self.update_interval_chart(charge, interval)
 
     def update_gauge(self, charge):
-        """Update the circular gauge with tick marks and charge label."""
-        self.gauge_canvas.delete("all")
+        """Update the vertical gauge using matplotlib."""
         max_charge = 1e-18  # Adjust maximum for better scaling
         normalized_charge = min(charge / max_charge, 1.0)
 
-        center_x, center_y, radius = 100, 100, 80
-        start_angle = -90
-        end_angle = start_angle + normalized_charge * 360
+        # Clear the previous gauge
+        self.gauge_ax.clear()
 
-        # Draw the filled arc for the gauge
-        self.gauge_canvas.create_arc(
-            center_x - radius, center_y - radius,
-            center_x + radius, center_y + radius,
-            start=start_angle, extent=end_angle - start_angle,
-            fill="blue", outline="blue"
+        # Plot the vertical bar
+        self.gauge_ax.bar(
+            [0],  # Single bar at position 0
+            [normalized_charge * max_charge],  # Scaled charge value
+            width=0.4, color="blue", edgecolor="black"
         )
 
-        # Draw the outer circle
-        self.gauge_canvas.create_oval(
-            center_x - radius, center_y - radius,
-            center_x + radius, center_y + radius,
-            outline="black"
+        # Add labels and formatting
+        self.gauge_ax.set_ylim(0, max_charge)  # Set range for vertical bar
+        self.gauge_ax.set_xlim(-1.0, 1.0)  # Increase horizontal margin to avoid clipping
+        self.gauge_ax.set_xticks([])  # Remove X-axis ticks
+        self.gauge_ax.set_ylabel("Charge (C)", fontsize=8)
+        self.gauge_ax.tick_params(axis="y", labelsize=8)
+        self.gauge_ax.grid(True, axis="y", linestyle="--", alpha=0.6)
+
+        # Set a title with the charge value
+        self.gauge_ax.set_title(
+            f"{charge:.2e} C", fontsize=10, color="blue", pad=15
         )
 
-        # Add tick marks
-        num_ticks = 10  # Number of ticks around the gauge
-        for i in range(num_ticks + 1):
-            tick_angle = start_angle + (360 / num_ticks) * i
-            rad_angle = np.radians(tick_angle)
+        # Adjust layout to ensure no clipping
+        self.gauge_figure.subplots_adjust(left=0.3, right=.95, top=0.8, bottom=0.1)
 
-            # Tick mark start and end points
-            x_start = center_x + (radius - 10) * cos(rad_angle)
-            y_start = center_y + (radius - 10) * sin(rad_angle)
-            x_end = center_x + radius * cos(rad_angle)
-            y_end = center_y + radius * sin(rad_angle)
+        # Redraw the gauge
+        self.gauge_chart_canvas.draw()
 
-            # Draw tick marks
-            self.gauge_canvas.create_line(x_start, y_start, x_end, y_end, fill="black")
-
-            # Add labels at every other tick
-            if i % 2 == 0:
-                label_angle = np.radians(tick_angle)
-                label_x = center_x + (radius - 20) * cos(label_angle)
-                label_y = center_y + (radius - 20) * sin(label_angle)
-                tick_value = max_charge * (i / num_ticks)
-                self.gauge_canvas.create_text(
-                    label_x, label_y, text=f"{tick_value:.1e}", font=("Arial", 8)
-                )
-
-        # Display the charge value in the center of the gauge
-        self.gauge_canvas.create_text(
-            center_x, center_y,
-            text=f"{charge:.2e} C", font=("Arial", 12, "bold")
-        )
 
     def update_interval_chart(self, charge, interval):
         """Update the histogram for interval observations."""
