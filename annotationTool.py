@@ -129,9 +129,19 @@ class MillikanExperimentApp:
         self.prediction_frame = tk.Frame(self.right_frame, bg="white")
         self.prediction_frame.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
+        # Placeholder label for "Gathering more data..."
+        self.placeholder_label = tk.Label(
+            self.prediction_frame, 
+            text="Gathering more data...", 
+            bg="white", 
+            font=("Arial", 14), 
+            fg="blue"
+        )
+        self.placeholder_label.pack(fill=tk.BOTH, expand=True)
+
         # Sub Frame
         self.prediction_sub_frame = tk.Frame(self.prediction_frame, bg="white")
-        self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)
+        # self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)
 
         # Vertical Gauge for Charge
         self.gauge_figure = Figure(figsize=(2.5, 3), dpi=100)
@@ -248,6 +258,8 @@ class MillikanExperimentApp:
         self.gauge_chart_canvas.draw()
         self.interval_ax.clear()
         self.interval_chart_canvas.draw()
+        self.placeholder_label.pack(fill=tk.BOTH, expand=True) 
+        self.prediction_sub_frame.pack_forget()  
 
     def on_mouse_down(self, event):
         self.start_x = event.x
@@ -460,7 +472,16 @@ class MillikanExperimentApp:
             self.display_frame(frame)
 
     def update_prediction_display(self, charge, interval):
-        """Update the gauge and bar chart with new prediction values."""
+        """Update the gauge and bar chart with new prediction values or switch from placeholder."""
+        if not charge or not interval:
+            self.placeholder_label.pack(fill=tk.BOTH, expand=True)  
+            self.prediction_sub_frame.pack_forget()  
+            return  
+
+        self.placeholder_label.pack_forget()  
+        self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)  
+
+        # Update the gauge and interval chart
         self.update_gauge(charge)
         self.update_interval_chart(charge, interval)
 
