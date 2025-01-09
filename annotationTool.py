@@ -298,6 +298,10 @@ class MillikanExperimentApp:
         self.paused = True
 
     def update_video_frame(self):
+        if not self.bbox:
+            messagebox.showinfo("Missed Step","Must select an area on the video first.")
+            return
+
         if self.paused or not self.video.isOpened():
             return
 
