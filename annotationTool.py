@@ -84,6 +84,17 @@ class MillikanExperimentApp:
         self.backward_button = tk.Button(self.controls_frame, text="Backward", command=self.move_backward, state=tk.DISABLED)
         self.backward_button.pack(fill=tk.X, pady=5)
 
+        # Slider for video scrubbing
+        self.slider = tk.Scale(
+            self.video_container,
+            from_=0,
+            to=0,  # This will be updated when a video is loaded
+            orient=tk.HORIZONTAL,
+            length=self.display_width,
+            command=self.on_slider_update
+        )
+        self.slider.pack(side=tk.BOTTOM, padx=5, pady=5)
+
 
         # Instructions (Top Right)
         self.instructions_label = tk.Label(self.right_frame, text="Instructions: \n1. Load videos\n2. Select a video\n3. Play or analyze", bg="white", anchor="nw", justify="left")
@@ -157,6 +168,9 @@ class MillikanExperimentApp:
             self.frame = cv2.resize(self.frame, (self.display_width, self.display_height))
             self.display_frame(self.frame)
 
+            self.slider.config(to=self.total_frames - 1)  # Set slider range
+            self.slider.set(self.current_frame)
+
             # Bind Mouse Event Listeners to Canvas
             self.video_canvas.bind("<ButtonPress-1>", self.on_mouse_down)
             self.video_canvas.bind("<B1-Motion>", self.on_mouse_drag)
@@ -186,6 +200,11 @@ class MillikanExperimentApp:
             self.tracker.init(self.frame, self.bbox)
             self.bbox_history[self.current_frame] = self.bbox
 
+            # Remove the slider when ROI is drawn
+            self.slider.pack_forget()
+            self.slider.destroy()
+            self.slider = None  # Remove the reference to the slider
+
     def play_video(self):
         self.video_canvas.delete("roi")
         self.paused = False
@@ -213,7 +232,9 @@ class MillikanExperimentApp:
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             cv2.rectangle(self.frame, p1, p2, (255, 0, 0), 2, 1)
 
+        
         self.display_frame(self.frame)
+
         self.root.after(10, self.update_video_frame)
 
     def save_yolo_format(self, frame_num, bbox, img_width, img_height, base_output_path):
@@ -316,6 +337,24 @@ class MillikanExperimentApp:
                     p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
                     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
                 self.display_frame(frame)
+
+    def on_slider_update(self, value):
+        if not self.slider:
+            return 
+        
+        if self.video and not self.paused:  # Pause video if it's playing
+            self.paused = True
+        self.current_frame = int(value)
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
+        ret, frame = self.video.read()
+        if ret:
+            frame = cv2.resize(frame, (self.display_width, self.display_height))
+            bbox = self.bbox_history.get(self.current_frame, None)
+            if bbox:
+                p1 = (int(bbox[0]), int(bbox[1]))
+                p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
+                cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
+            self.display_frame(frame)
 
 if __name__ == "__main__":
     root = tk.Tk()
