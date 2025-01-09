@@ -129,10 +129,10 @@ class MillikanExperimentApp:
 
         # Circular Gauge for Charge
         self.gauge_canvas = tk.Canvas(self.prediction_sub_frame, width=200, height=200, bg="white")
-        self.gauge_canvas.pack(side=tk.LEFT, padx=10, pady=10)
+        self.gauge_canvas.pack(side=tk.LEFT, padx=5, pady=10)
 
         # Interval Scatter Plot Chart
-        self.interval_figure = Figure(figsize=(3, 1), dpi=100)  # Reduced figure size
+        self.interval_figure = Figure(figsize=(4, 1), dpi=100)  # Reduced figure size
         self.interval_ax = self.interval_figure.add_subplot(111)
         self.interval_chart_canvas = FigureCanvasTkAgg(self.interval_figure, self.prediction_sub_frame)
         self.interval_chart_canvas.get_tk_widget().pack(
@@ -200,8 +200,9 @@ class MillikanExperimentApp:
             self.frame = cv2.resize(self.frame, (self.display_width, self.display_height))
             self.display_frame(self.frame)
 
-            self.slider.config(to=self.total_frames - 1)  # Set slider range
-            self.slider.set(self.current_frame)
+            if self.slider is not None:
+                self.slider.config(to=self.total_frames - 1)  # Set slider range
+                self.slider.set(self.current_frame)
 
             # Bind Mouse Event Listeners to Canvas
             self.video_canvas.bind("<ButtonPress-1>", self.on_mouse_down)
@@ -257,7 +258,8 @@ class MillikanExperimentApp:
             self.tracker.init(self.frame, self.bbox)
             self.bbox_history[self.current_frame] = self.bbox
 
-            # Remove the slider when ROI is drawn
+        # Safely remove the slider
+        if self.slider is not None:
             self.slider.pack_forget()
             self.slider.destroy()
             self.slider = None  # Remove the reference to the slider
