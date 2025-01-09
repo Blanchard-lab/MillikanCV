@@ -9,6 +9,7 @@ from matplotlib.figure import Figure
 import numpy as np
 from scipy.signal import find_peaks
 from components import ChargeCalculator
+from tkinter.ttk import Progressbar
 
 class MillikanExperimentApp:
 
@@ -41,7 +42,17 @@ class MillikanExperimentApp:
 
         self.y_centers = []
 
+
+
         # GUI Layout
+
+        # Progress Bar Frame
+        self.progress_frame = tk.Frame(root, bg="white")  # Create a new frame for the progress bar
+        self.progress_frame.pack(side=tk.TOP, fill=tk.X, padx=10, pady=5)  # Pack it at the top of the root window
+
+        self.progress_bar = Progressbar(self.progress_frame, orient=tk.HORIZONTAL, mode='determinate', length=self.display_width)
+        self.progress_bar.pack(fill=tk.X, pady=5) 
+
         # Left Frame for loading videos
         self.left_frame = tk.Frame(root, width=200, bg="lightgray")
         self.left_frame.pack(side=tk.LEFT, fill=tk.Y)
@@ -57,7 +68,7 @@ class MillikanExperimentApp:
 
         # Right Frame for the 2x2 grid
         self.right_frame = tk.Frame(root)
-        self.right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        self.right_frame.pack(side=tk.TOP, expand=True)
 
         # Video display and controls (Top Left)
         self.video_container = tk.Frame(self.right_frame)
@@ -234,6 +245,10 @@ class MillikanExperimentApp:
 
         
         self.display_frame(self.frame)
+
+        # Update the progress bar
+        progress = (self.current_frame / self.total_frames) * 100
+        self.progress_bar['value'] = progress
 
         self.root.after(10, self.update_video_frame)
 
