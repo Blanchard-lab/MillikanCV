@@ -520,23 +520,44 @@ class MillikanExperimentApp:
         )
 
     def update_interval_chart(self, charge, interval):
-        """Update the scatter plot for charge vs. interval."""
+        """Update the histogram for interval observations."""
         self.interval_ax.clear()
-        
-        # Add the new charge-interval pair to the list
-        if charge is not None:
+
+        # Initialize or update the charge_interval_pairs list
+        if interval is not None:
             self.charge_interval_pairs.append((charge, interval))
-        
-        # Prepare data for the scatter plot
-        charges = [pair[0] for pair in self.charge_interval_pairs]
+
+        # Extract all intervals for the histogram
         intervals = [pair[1] for pair in self.charge_interval_pairs]
 
-        # Scatter plot for charge vs. interval
-        self.interval_ax.scatter(charges, intervals, color="blue", label="Data Points", s=20)  # Reduced point size
-        self.interval_ax.set_title("Charge vs. Interval", fontsize=10)  # Smaller title font
-        self.interval_ax.set_xlabel("Charge (C)", fontsize=8)  # Smaller label font
-        self.interval_ax.set_ylabel("Interval", fontsize=8)
+        # Calculate the histogram bins and counts
+        bins = np.linspace(min(intervals), max(intervals), 11)  # Divide into 10 bins
+        counts, edges = np.histogram(intervals, bins=bins)
+
+        # Calculate the mean interval
+        mean_interval = np.mean(intervals)
+
+        # Plot the histogram
+        self.interval_ax.bar(
+            edges[:-1], counts, width=np.diff(edges), align="edge",
+            color="blue", edgecolor="black", alpha=0.7
+        )
+
+        # Add a green line for the mean interval
+        self.interval_ax.axvline(x=mean_interval, color="green", linestyle="--", linewidth=1)
+
+        # Set titles and labels
+        self.interval_ax.set_title("Histogram of Intervals", fontsize=10)
+        self.interval_ax.set_xlabel("Interval", fontsize=8)
+        self.interval_ax.set_ylabel("Count", fontsize=8)
         self.interval_ax.grid(True)
+
+        # Display the mean value above the histogram title
+        self.interval_ax.annotate(
+            f"Mean Interval: {mean_interval:.2f}",
+            xy=(0.5, 1.20), xycoords='axes fraction',  # Position above the chart title
+            fontsize=10, color="green", ha="center"
+        )
 
         self.interval_figure.tight_layout()
 
