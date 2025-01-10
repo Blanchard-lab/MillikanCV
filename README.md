@@ -28,4 +28,4 @@ python annotationTool.py
 
 # Building the Excutable
 
-pyinstaller.exe --onefile --noconsole --icon=images\experiment_105162.ico --hidden-import=scipy._lib.messagestream --clean annotationTool.py
+pyinstaller.exe --onefile --noconsole --icon=images\experiment_105162.ico  --clean annotationTool.py
