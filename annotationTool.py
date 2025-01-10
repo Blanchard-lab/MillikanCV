@@ -434,7 +434,7 @@ class MillikanExperimentApp:
             
     def add_visual_element(self):
         """Add an image to the instructions frame."""
-        image_path = "/Users/calebchristian/Desktop/WorkingMillikanCV/MillikanCVV1/media/millikanApparatus.png"
+        image_path = os.path.join('media', 'millikanApparatus.png')
         image = Image.open(image_path).resize((400, 300), Image.Resampling.LANCZOS)  # Resize image
         self.image_tk = ImageTk.PhotoImage(image)  # Keep a reference to avoid garbage collection
 
@@ -742,6 +742,17 @@ class MillikanExperimentApp:
                 if len(y) - 1 not in peaks:
                     peaks = np.append(peaks, [len(y) - 1])
 
+                            # Create lists of tuples for peaks and troughs
+        peak_points = [(t[index], y[index]) for index in peaks]
+        trough_points = [(t[index], y[index]) for index in troughs]
+
+        try:
+            vu, vd = find_slopes(peak_points, trough_points)
+            charge, interval = self.charge_calculator.find_charge_and_interval(vu, vd)
+            self.update_prediction_display(charge, interval)
+        except ValueError as e:
+            pass
+
         # Plotting
         self.ax.clear()
         self.ax.set_title('Detected Peaks and Troughs in Y-Center Data')
@@ -896,13 +907,13 @@ class MillikanExperimentApp:
         self.gauge_ax.set_ylim(0, max_charge)  
         self.gauge_ax.set_xlim(-1.0, 1.0)
         self.gauge_ax.set_xticks([]) 
-        self.gauge_ax.set_ylabel("Charge (C)", fontsize=8)
+        self.gauge_ax.set_ylabel("q = Charge (C)", fontsize=8)
         self.gauge_ax.tick_params(axis="y", labelsize=8)
         self.gauge_ax.grid(True, axis="y", linestyle="--", alpha=0.6)
 
         # Set a title with the charge value
         self.gauge_ax.set_title(
-            f"{charge:.2e} C", fontsize=10, color="blue", pad=15
+            f"q = {charge:.2e} C", fontsize=10, color="blue", pad=15
         )
 
         # Adjust layout to ensure no clipping
@@ -942,8 +953,8 @@ class MillikanExperimentApp:
 
         # Annotate the mean value
         self.interval_ax.annotate(
-            f"Mean Interval: {mean_interval:.2f}",
-            xy=(0.5, 1.20), xycoords='axes fraction',
+            f"q/e = Mean Interval: {mean_interval:.2f}",
+            xy=(0.5, 1.25), xycoords='axes fraction',
             fontsize=10, color="green", ha="center"
         )
 
