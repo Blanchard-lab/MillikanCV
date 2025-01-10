@@ -16,7 +16,7 @@ class MillikanExperimentApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Millikan Experiment")
-
+        self.current_page = 0 
         self.charge_calculator = ChargeCalculator()
 
         # Video and Tracker Variables
@@ -115,9 +115,126 @@ class MillikanExperimentApp:
         )
         self.slider.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
-        # Instructions (Top Right)
-        self.instructions_label = tk.Label(self.right_frame, text="Instructions: \n1. Load videos\n2. Select a video\n3. Play or analyze", bg="white", anchor="nw", justify="left")
-        self.instructions_label.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+
+
+        ##################################################
+        # Instructions Frame (Container for instructions and buttons)
+        self.instructions_frame = tk.Frame(self.right_frame, bg="white")
+        self.instructions_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+
+        # Configure the layout for instructions_frame
+        self.instructions_frame.grid_rowconfigure(0, weight=1)  # Instructions text
+        self.instructions_frame.grid_rowconfigure(1, weight=1)  # Image row
+        self.instructions_frame.grid_rowconfigure(2, weight=0)  # Empty row for padding (optional)
+        self.instructions_frame.grid_rowconfigure(3, weight=0)  # Buttons row
+        self.instructions_frame.grid_columnconfigure(0, weight=1)  # For centering elements
+        self.instructions_frame.grid_columnconfigure(1, weight=1)  # To position "Next" properly
+
+        # Instructions Label
+        self.instructions_label = tk.Label(
+            self.instructions_frame,
+            text="Instructions: \n1. Load videos\n2. Select a video\n3. Play or analyze",
+            bg="white",
+            anchor="nw",
+            justify="left",
+            wraplength=600 # Adjust for better text wrapping
+        )
+        self.instructions_label.grid(row=0, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+
+        
+        ###########################
+        # Add visual element (Image)
+        self.add_visual_element()
+        # Add eq 1
+        self.add_equation_widget()
+        # Add eq 2 
+        self.add_equation_widget2()
+        # Add eq 3
+        self.add_equation_widget3()
+        # Add eq 4
+        self.add_equation_widget4()
+        # Add eq 5
+        self.add_equation_widget5()
+        ###########################
+
+        # Back Button (bottom-left of instructions grid)
+        self.back_button = tk.Button(self.instructions_frame, text="Back", command=self.back_action, state=tk.DISABLED)
+        self.back_button.grid(row=3, column=0, sticky="w", padx=5, pady=5)
+
+        # Next Button (bottom-right of instructions grid)
+        self.next_button = tk.Button(self.instructions_frame, text="Next", command=self.next_action)
+        self.next_button.grid(row=3, column=1, sticky="e", padx=5, pady=5)
+        
+        # Page content
+        self.pages = [
+            "Welcome! This application is designed to facilitate the prediction of electrical charge.\n\n"
+            "This experiment was originally conducted by Robert A. Millikan in 1909. The Millikan Oil Drop\n "
+            "Experiment is a classic physics experiment designed to measure the charge of an electron.\n "
+            "Millikan achieved this by suspending tiny charged oil droplets in an electric field and\n "
+            "analyzing their motion.\n\n"
+            "Illustrated below is an example of the apparatus used by Millikan to suspend microscopic oil droplets. The motion of these droplets could be carefully controlled, allowing them to rise under the influence of an electric field or fall due to the force of gravity.\n\n"
+            "Oil droplets are sprayed into a chamber between two closely spaced horizontal plates. These plates are insulated and connected to a voltage source. A potential difference across the plates creates an electric field, which can balance the downward force of gravity on the charged droplets, holding them stationary.\n\n"
+            "Click the Next button to Continue.",
+            
+            "These tiny oil-dropleps viewed through a microscope are under the influence different forces when rising or falling.\n\n"
+            "1) Forces Acting on the droplet. \n\n"
+            "When the droplet is falling, the forces acting on it can be balanced as follows: \n\n\n\n\n\n\n\n"
+            "Where: V(t) is the terminal velocity of the falling droplet, r is the radius of the droplet, η is the viscosity of air, ρ oil density of the oil, ρ air is the density of the air, and g is gravity.\n\n"
+            "The radius of the droplet is calculated using: \n\n\n\n\n\n\n\n\n"
+            "Click the Next button to Continue.",
+            
+            "2) Forces During the Droplets Ascent\n\n"
+            "When the droplet rises under the influence of the electric field, the forces balance differently. The electric force must overcome both gravity and drag: \n\n\n\n\n\n\n"
+            "Where: V(r) is the rising velocity of the droplet, and E is the electric field strength.\n\n"
+            
+            
+            "Using the relationship E = V / d, this becomes:\n\n\n\n\n\n\n\n\n"
+            "From this, the charge q is determined:\n\n\n\n\n\n\n\n\n"
+            "Click the Next button to Continue.",
+            
+            "Computing Electrical Charge.\n\n"
+            "As noted by the final equation, there are many variables to be accounted for in order to calculate q, the charge of an oil-droplet in Coulombs.\n\n"
+            "Given that this application is meant to be used with the MillikanCV dataset, we have all the variables needed to compute electrical charge.\n\n"
+            "Voltage (V) = 500 volts\n\n"
+            "Distance (d) = 4.902 mm \n\n"
+            
+            
+            
+            
+            
+            
+            
+            "As part of this application, the developers have compiled a dataset of over a hundred videos capturing particles first falling under the influence of gravity and then rising due to an applied voltage.\n\n"
+            "These videos can be analyzed using this application to accurately predict the charge of the particle under observation!\n\n"
+    
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        ]
+
+        # Initialize the first page
+        self.update_page()
+        
+        # Configure the layout for instructions_frame
+        self.instructions_frame.grid_rowconfigure(0, weight=1)  # Instructions text
+        self.instructions_frame.grid_rowconfigure(1, weight=0)  # Buttons row
+        self.instructions_frame.grid_columnconfigure(0, weight=1)  # Back button
+        self.instructions_frame.grid_columnconfigure(1, weight=1)  # Next button
+
+        ##################################################
+        
 
         # Chart (Bottom Left)
         self.chart_frame = tk.Frame(self.right_frame)
@@ -248,7 +365,235 @@ class MillikanExperimentApp:
             self.video_canvas.bind("<ButtonRelease-1>", self.on_mouse_up)
         else:
             messagebox.showerror("Error", "Could not read the first frame of the video")
+    
+    
+    ########################
+    def update_page(self):
+        """Update the instructions label and buttons based on the current page."""
+        # Set the text for the current page
+        self.instructions_label.config(text=self.pages[self.current_page])
 
+        # Show or hide the image depending on the page
+        if self.current_page == 0:
+            self.image_label.grid()  # Show the image on the first page
+        else:
+            self.image_label.grid_remove()  # Hide the image on other pages
+        
+        # Show/hide equation
+        if self.current_page == 1: 
+            # Example: On page 1, display the equation
+            self.set_equation_text(r"$6 \pi \eta r v_t = \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
+            self.equation_widget.grid()
+            
+            self.set_equation_text2(r"$r = \sqrt{\frac{9 \eta v_t}{2 g (\rho_{\text{oil}} - \rho_{\text{air}})}}$") 
+            self.equation_widget2.grid()
+        else:
+            self.equation_widget.grid_remove()
+            self.equation_widget2.grid_remove()
+        
+        if self.current_page == 2:
+            self.set_equation_text3(r"$q \cdot E = 6 \pi \eta r v_r + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
+            self.equation_widget3.grid()
+            
+            self.set_equation_text4(r"$q \cdot \frac{V}{d} = 6 \pi \eta r v_r + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
+            self.equation_widget4.grid()
+            
+            self.set_equation_text5(r"$q = \frac{6 \pi \eta r v_r + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g}{\left(\frac{V}{d}\right)}$")
+            self.equation_widget5.grid()
+            
+        else:
+            self.equation_widget3.grid_remove()
+            self.equation_widget4.grid_remove()
+            self.equation_widget5.grid_remove()
+           
+            
+            
+        # Enable or disable buttons based on the current page
+        if self.current_page == 0:
+            self.back_button.config(state=tk.DISABLED)  # Disable back on the first page
+        else:
+            self.back_button.config(state=tk.NORMAL)
+
+        if self.current_page == len(self.pages) - 1:
+            self.next_button.config(state=tk.DISABLED)  # Disable next on the last page
+        else:
+            self.next_button.config(state=tk.NORMAL)
+        
+
+    def back_action(self):
+        """Handle the Back button click."""
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.update_page()
+
+    def next_action(self):
+        """Handle the Next button click."""
+        if self.current_page < len(self.pages) - 1:
+            self.current_page += 1
+            self.update_page()
+            
+    def add_visual_element(self):
+        """Add an image to the instructions frame."""
+        image_path = "/Users/calebchristian/Desktop/WorkingMillikanCV/MillikanCVV1/media/millikanApparatus.png"
+        image = Image.open(image_path).resize((400, 300), Image.Resampling.LANCZOS)  # Resize image
+        self.image_tk = ImageTk.PhotoImage(image)  # Keep a reference to avoid garbage collection
+
+        # Create a label for the image
+        self.image_label = tk.Label(self.instructions_frame, image=self.image_tk, bg="white")
+        self.image_label.grid(row=1, column=0, columnspan=2, pady=10, sticky="n")  # Center image horizontally
+   ##########
+   # Eq 1 
+    def add_equation_widget(self):
+        """Create the matplotlib figure to display a LaTeX equation, then hide it initially."""
+        self.equation_figure = Figure(figsize=(3, 1), dpi=100) #(Width, Height)
+        self.equation_ax = self.equation_figure.add_subplot(111)
+        self.equation_ax.axis('off')  # Hide axes for a cleaner look
+
+        self.equation_canvas = FigureCanvasTkAgg(self.equation_figure, self.instructions_frame)
+        self.equation_widget = self.equation_canvas.get_tk_widget()
+        
+        # Position in grid, but hide initially
+        self.equation_widget.grid(row=0, column=0, columnspan=2, pady=(130,80), sticky="n")
+        self.equation_widget.grid_remove() # Hide for now   
+        
+    def set_equation_text(self, latex_equation: str):
+        """Render the LaTeX equation text in the existing matplotlib figure."""
+        # Clear old text
+        self.equation_ax.clear()
+        self.equation_ax.axis('off')
+
+        # Render the new LaTeX equation
+        self.equation_ax.text(
+            0.5, 0.5,
+            latex_equation,
+            fontsize=16,
+            ha='center',
+            va='center',
+            transform=self.equation_ax.transAxes
+        )
+        self.equation_canvas.draw()
+        
+    # Eq 2
+    def add_equation_widget2(self):
+        """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
+        self.equation_figure2 = Figure(figsize=(3, 1), dpi=100)
+        self.equation_ax2 = self.equation_figure2.add_subplot(111)
+        self.equation_ax2.axis('off')  # Hide axes for a cleaner look
+
+        self.equation_canvas2 = FigureCanvasTkAgg(self.equation_figure2, self.instructions_frame)
+        self.equation_widget2 = self.equation_canvas2.get_tk_widget()
+        
+        # Position in the grid but hide for now
+        # Adjust row/column to your liking (e.g., row=2 or row=3)
+        self.equation_widget2.grid(row=0, column=0, columnspan=2, pady=(330, 80), sticky="n")
+        self.equation_widget2.grid_remove()  # Hide initially
+    
+    def set_equation_text2(self, latex_equation: str):
+        """Render the LaTeX equation text in the second matplotlib figure."""
+        self.equation_ax2.clear()
+        self.equation_ax2.axis('off')
+
+        self.equation_ax2.text(
+            0.5, 0.5,
+            latex_equation,
+            fontsize=16,
+            ha='center',
+            va='center',
+            transform=self.equation_ax2.transAxes
+        )
+        self.equation_canvas2.draw() 
+        
+    # Eq 3 
+    def add_equation_widget3(self):
+        """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
+        self.equation_figure3 = Figure(figsize=(3, 1), dpi=100)
+        self.equation_ax3 = self.equation_figure3.add_subplot(111)
+        self.equation_ax3.axis('off')  # Hide axes for a cleaner look
+
+        self.equation_canvas3 = FigureCanvasTkAgg(self.equation_figure3, self.instructions_frame)
+        self.equation_widget3 = self.equation_canvas3.get_tk_widget()
+        
+        # Position in the grid but hide for now
+        # Adjust row/column to your liking (e.g., row=2 or row=3)
+        self.equation_widget3.grid(row=0, column=0, columnspan=2, pady=(80, 80), sticky="n")
+        self.equation_widget3.grid_remove()  # Hide initially
+    
+    def set_equation_text3(self, latex_equation: str):
+        """Render the LaTeX equation text in the second matplotlib figure."""
+        self.equation_ax3.clear()
+        self.equation_ax3.axis('off')
+
+        self.equation_ax3.text(
+            0.5, 0.5,
+            latex_equation,
+            fontsize=16,
+            ha='center',
+            va='center',
+            transform=self.equation_ax3.transAxes
+        )
+        self.equation_canvas3.draw() 
+    
+    # Eq 4
+    def add_equation_widget4(self):
+        """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
+        self.equation_figure4 = Figure(figsize=(3, 1), dpi=100)
+        self.equation_ax4 = self.equation_figure4.add_subplot(111)
+        self.equation_ax4.axis('off')  # Hide axes for a cleaner look
+
+        self.equation_canvas4 = FigureCanvasTkAgg(self.equation_figure4, self.instructions_frame)
+        self.equation_widget4 = self.equation_canvas4.get_tk_widget()
+        
+        # Position in the grid but hide for now
+        # Adjust row/column to your liking (e.g., row=2 or row=3)
+        self.equation_widget4.grid(row=0, column=0, columnspan=2, pady=(250, 100), sticky="n")
+        self.equation_widget4.grid_remove()  # Hide initially
+    
+    def set_equation_text4(self, latex_equation: str):
+        """Render the LaTeX equation text in the second matplotlib figure."""
+        self.equation_ax4.clear()
+        self.equation_ax4.axis('off')
+
+        self.equation_ax4.text(
+            0.5, 0.5,
+            latex_equation,
+            fontsize=16,
+            ha='center',
+            va='center',
+            transform=self.equation_ax4.transAxes
+        )
+        self.equation_canvas4.draw() 
+    
+    # Eq 5
+    def add_equation_widget5(self):
+        """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
+        self.equation_figure5 = Figure(figsize=(3, 1), dpi=100)
+        self.equation_ax5 = self.equation_figure5.add_subplot(111)
+        self.equation_ax5.axis('off')  # Hide axes for a cleaner look
+
+        self.equation_canvas5 = FigureCanvasTkAgg(self.equation_figure5, self.instructions_frame)
+        self.equation_widget5 = self.equation_canvas5.get_tk_widget()
+        
+        # Position in the grid but hide for now
+        # Adjust row/column to your liking (e.g., row=2 or row=3)
+        self.equation_widget5.grid(row=0, column=0, columnspan=2, pady=(380, 50), sticky="n")
+        self.equation_widget5.grid_remove()  # Hide initially
+    
+    def set_equation_text5(self, latex_equation: str):
+        """Render the LaTeX equation text in the second matplotlib figure."""
+        self.equation_ax5.clear()
+        self.equation_ax5.axis('off')
+
+        self.equation_ax5.text(
+            0.5, 0.5,
+            latex_equation,
+            fontsize=16,
+            ha='center',
+            va='center',
+            transform=self.equation_ax5.transAxes
+        )
+        self.equation_canvas5.draw() 
+        ######################
+    
     def reset_states(self):
         """Reset all states to their initial values."""
         # Reset variables
