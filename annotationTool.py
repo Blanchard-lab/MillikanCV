@@ -419,16 +419,17 @@ class MillikanExperimentApp:
         else:
             self.next_button.config(state=tk.NORMAL)
         
-
     def back_action(self):
         """Handle the Back button click."""
         if self.current_page > 0:
+            self.highlight_button(self.back_button)
             self.current_page -= 1
             self.update_page()
 
     def next_action(self):
         """Handle the Next button click."""
         if self.current_page < len(self.pages) - 1:
+            self.highlight_button(self.next_button)
             self.current_page += 1
             self.update_page()
             
