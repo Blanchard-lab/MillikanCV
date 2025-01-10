@@ -43,6 +43,10 @@ class MillikanExperimentApp:
         self.y_centers = []
         self.charge_interval_pairs = []
 
+        # Batch size for updates
+        self.batch_size = 50  # Update charts after every 20 frames
+        self.batch_y_centers = []
+
         # GUI Layout
 
         # Progress Bar Frame
@@ -343,10 +347,15 @@ class MillikanExperimentApp:
         ret, bbox = self.tracker.update(self.frame)
         if ret:
             self.bbox_history[self.current_frame] = bbox
-            self.save_yolo_format(self.current_frame, bbox, self.display_width, self.display_height, self.output_path)
+            self.batch_y_centers.append((self.current_frame, bbox[1] + bbox[3] / 2))
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             cv2.rectangle(self.frame, p1, p2, (255, 0, 0), 2, 1)
+
+        # Update the batch when batch size is reached
+        if len(self.batch_y_centers) >= self.batch_size:
+            self.process_batch_data()
+            self.batch_y_centers = [] 
 
         
         self.display_frame(self.frame)
@@ -357,54 +366,36 @@ class MillikanExperimentApp:
 
         self.root.after(10, self.update_video_frame)
 
-    def save_yolo_format(self, frame_num, bbox, img_width, img_height, base_output_path):
-        x_center = (bbox[0] + bbox[2] / 2) / img_width
-        y_center = (bbox[1] + bbox[3] / 2) / img_height
-        width = bbox[2] / img_width
-        height = bbox[3] / img_height
+    def process_batch_data(self):
+        """Process batch data using numpy for efficient computation."""
+        if len(self.batch_y_centers) == 0:
+            return
 
-        self.y_centers.append(y_center)
-
-        # output_path = os.path.join(base_output_path, f"{frame_num:06d}.txt")
-        # with open(output_path, 'w') as file:
-        #     file.write(f"0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
-
+        batch_array = np.array(self.batch_y_centers)
+        normalized_y_centers = batch_array[:, 1] / self.display_height
+        self.y_centers.extend(normalized_y_centers.tolist())
         self.update_chart()
+
 
     def update_chart(self):
         """Find and plot peaks and troughs in y-center data, ensuring the first and last data points are treated as specified."""
-        # Convert list to numpy array for processing
-        y = np.array(self.y_centers) * 512  # Scaling to pixel values
+        y = np.array(self.y_centers) * 512  # Scale to pixel values
         t = np.arange(len(self.y_centers))  # Time indices
 
-        # Finding peaks and troughs
+        # Use numpy functions to find peaks and troughs
         peaks, _ = find_peaks(y, distance=100, prominence=100)
         troughs, _ = find_peaks(-y, distance=100, prominence=100)
 
         # Enforce the first and last frame conditions
-        # First frame is always a min
         if 0 not in troughs:
             troughs = np.append([0], troughs)
-
-        # Last frame is opposite of the last detected peak or trough
         if len(peaks) > 0 and len(troughs) > 0:
-            if peaks[-1] > troughs[-1]:  # Last detected was a peak
+            if peaks[-1] > troughs[-1]:
                 if len(y) - 1 not in troughs:
                     troughs = np.append(troughs, [len(y) - 1])
-            else:  # Last detected was a trough
+            else:
                 if len(y) - 1 not in peaks:
                     peaks = np.append(peaks, [len(y) - 1])
-
-        # Create lists of tuples for peaks and troughs
-        peak_points = [(t[index], y[index]) for index in peaks]
-        trough_points = [(t[index], y[index]) for index in troughs]
-
-        try:
-            vu, vd = find_slopes(peak_points, trough_points)
-            charge, interval = self.charge_calculator.find_charge_and_interval(vu, vd)
-            self.update_prediction_display(charge, interval)
-        except ValueError as e:
-            pass
 
         # Plotting
         self.ax.clear()
@@ -418,6 +409,7 @@ class MillikanExperimentApp:
         self.ax.invert_yaxis()
         self.ax.legend()
         self.chart_canvas.draw()
+
 
     def display_frame(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -578,27 +570,23 @@ class MillikanExperimentApp:
         """Update the histogram for interval observations."""
         self.interval_ax.clear()
 
-        # Initialize or update the charge_interval_pairs list
         if interval is not None:
             self.charge_interval_pairs.append((charge, interval))
 
-        # Extract all intervals for the histogram
-        intervals = [pair[1] for pair in self.charge_interval_pairs]
+        # Convert intervals to numpy array
+        intervals = np.array([pair[1] for pair in self.charge_interval_pairs])
 
-        # Calculate the histogram bins and counts
-        bins = np.linspace(min(intervals), max(intervals), 11)  # Divide into 10 bins
+        # Calculate histogram bins and counts using numpy
+        bins = np.linspace(np.min(intervals), np.max(intervals), 11)
         counts, edges = np.histogram(intervals, bins=bins)
 
-        # Calculate the mean interval
+        # Calculate mean interval with numpy
         mean_interval = np.mean(intervals)
 
-        # Plot the histogram
-        self.interval_ax.bar(
-            edges[:-1], counts, width=np.diff(edges), align="edge",
-            color="blue", edgecolor="black", alpha=0.7
-        )
+        # Plot histogram
+        self.interval_ax.bar(edges[:-1], counts, width=np.diff(edges), align="edge", color="blue", edgecolor="black", alpha=0.7)
 
-        # Add a green line for the mean interval
+        # Add mean line
         self.interval_ax.axvline(x=mean_interval, color="green", linestyle="--", linewidth=1)
 
         # Set titles and labels
@@ -607,19 +595,17 @@ class MillikanExperimentApp:
         self.interval_ax.set_ylabel("Count", fontsize=8)
         self.interval_ax.grid(True)
 
-        # Display the mean value above the histogram title
+        # Annotate the mean value
         self.interval_ax.annotate(
             f"Mean Interval: {mean_interval:.2f}",
-            xy=(0.5, 1.20), xycoords='axes fraction',  # Position above the chart title
+            xy=(0.5, 1.20), xycoords='axes fraction',
             fontsize=10, color="green", ha="center"
         )
 
         self.interval_figure.tight_layout()
-
-        # Adjust tick label sizes
         self.interval_ax.tick_params(axis='both', which='major', labelsize=8)
-
         self.interval_chart_canvas.draw()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
