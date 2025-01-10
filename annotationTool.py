@@ -296,10 +296,18 @@ class MillikanExperimentApp:
         self.video_canvas.delete("roi")
         self.paused = False
         self.update_video_frame()
+        self.forward_button.config(state=tk.DISABLED)
+        self.backward_button.config(state=tk.DISABLED)
+        self.fast_forward_button.config(state=tk.DISABLED)
+        self.fast_backward_button.config(state=tk.DISABLED)
 
     def pause_video(self):
         self.highlight_button(self.pause_button)
         self.paused = True
+        self.forward_button.config(state=tk.ACTIVE)
+        self.backward_button.config(state=tk.ACTIVE)
+        self.fast_forward_button.config(state=tk.ACTIVE)
+        self.fast_backward_button.config(state=tk.ACTIVE)
 
     def update_video_frame(self):
         if not self.bbox:
@@ -595,7 +603,6 @@ class MillikanExperimentApp:
         self.interval_ax.tick_params(axis='both', which='major', labelsize=8)
 
         self.interval_chart_canvas.draw()
-
 
 if __name__ == "__main__":
     root = tk.Tk()
