@@ -68,7 +68,7 @@ class MillikanExperimentApp:
 
         # Right Frame for the 2x2 grid
         self.right_frame = tk.Frame(root)
-        self.right_frame.pack(side=tk.TOP, fill=tk.Y)
+        self.right_frame.pack(side=tk.TOP, fill=tk.BOTH)
 
         # Video display and controls (Top Left)
         self.video_container = tk.Frame(self.right_frame)
