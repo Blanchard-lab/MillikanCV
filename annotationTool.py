@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
 import cv2
 import os
@@ -10,7 +10,6 @@ import numpy as np
 from scipy.signal import find_peaks
 from components import ChargeCalculator
 from tkinter.ttk import Progressbar
-from math import cos, sin
 
 class MillikanExperimentApp:
 
@@ -172,12 +171,23 @@ class MillikanExperimentApp:
         self.video_container.grid_columnconfigure(1, weight=0)  # Controls frame
 
     def load_videos(self):
-        """Load video files from the directory into the Listbox."""
+        """Load video files from a user-selected directory into the Listbox."""
         self.highlight_button(self.load_videos_button)
         self.video_listbox.delete(0, tk.END)
-        if not os.path.exists(self.video_directory):
-            os.makedirs(self.video_directory)
+
+        # Open a dialog for the user to select a folder
+        selected_directory = filedialog.askdirectory(title="Select Video Directory")
+        if not selected_directory:  # If the user cancels the dialog
+            return
+
+        self.video_directory = selected_directory
+
+        # List videos in the selected directory
         videos = [f for f in os.listdir(self.video_directory) if f.lower().endswith(('.mp4', '.avi', '.mov'))]
+        if not videos:
+            messagebox.showinfo("No Videos Found", "No video files were found in the selected directory.")
+            return
+
         for video in videos:
             self.video_listbox.insert(tk.END, video)
 
