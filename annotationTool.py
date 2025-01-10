@@ -292,22 +292,28 @@ class MillikanExperimentApp:
             self.slider = None  # Remove the reference to the slider
 
     def play_video(self):
-        self.highlight_button(self.play_button)
-        self.video_canvas.delete("roi")
-        self.paused = False
-        self.update_video_frame()
-        self.forward_button.config(state=tk.DISABLED)
-        self.backward_button.config(state=tk.DISABLED)
-        self.fast_forward_button.config(state=tk.DISABLED)
-        self.fast_backward_button.config(state=tk.DISABLED)
+        if self.paused:
+            self.highlight_button(self.play_button)
+            self.video_canvas.delete("roi")
+            self.paused = False
+            self.update_video_frame()
+            self.play_button.config(state=tk.DISABLED)
+            self.pause_button.config(state=tk.ACTIVE)
+            self.forward_button.config(state=tk.DISABLED)
+            self.backward_button.config(state=tk.DISABLED)
+            self.fast_forward_button.config(state=tk.DISABLED)
+            self.fast_backward_button.config(state=tk.DISABLED)
 
     def pause_video(self):
-        self.highlight_button(self.pause_button)
-        self.paused = True
-        self.forward_button.config(state=tk.ACTIVE)
-        self.backward_button.config(state=tk.ACTIVE)
-        self.fast_forward_button.config(state=tk.ACTIVE)
-        self.fast_backward_button.config(state=tk.ACTIVE)
+        if not self.paused:
+            self.highlight_button(self.pause_button)
+            self.paused = True
+            self.play_button.config(state=tk.ACTIVE)
+            self.pause_button.config(state=tk.DISABLED)
+            self.forward_button.config(state=tk.ACTIVE)
+            self.backward_button.config(state=tk.ACTIVE)
+            self.fast_forward_button.config(state=tk.ACTIVE)
+            self.fast_backward_button.config(state=tk.ACTIVE)
 
     def update_video_frame(self):
         if not self.bbox:
