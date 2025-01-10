@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from PIL import Image, ImageTk
 import cv2
 import os
@@ -10,7 +10,6 @@ import numpy as np
 from scipy.signal import find_peaks
 from components import ChargeCalculator
 from tkinter.ttk import Progressbar
-from math import cos, sin
 
 class MillikanExperimentApp:
 
@@ -43,6 +42,10 @@ class MillikanExperimentApp:
 
         self.y_centers = []
         self.charge_interval_pairs = []
+
+        # Batch size for updates
+        self.batch_size = 50  # Update charts after every 20 frames
+        self.batch_y_centers = []
 
         # GUI Layout
 
@@ -246,20 +249,34 @@ class MillikanExperimentApp:
         self.prediction_frame = tk.Frame(self.right_frame, bg="white")
         self.prediction_frame.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
+        # Placeholder label for "Gathering more data..."
+        self.placeholder_label = tk.Label(
+            self.prediction_frame, 
+            text="Gathering more data...", 
+            bg="white", 
+            font=("Arial", 14), 
+            fg="blue"
+        )
+        self.placeholder_label.pack(fill=tk.BOTH, expand=True)
+
         # Sub Frame
         self.prediction_sub_frame = tk.Frame(self.prediction_frame, bg="white")
-        self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)
+        # self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Circular Gauge for Charge
-        self.gauge_canvas = tk.Canvas(self.prediction_sub_frame, width=200, height=200, bg="white")
-        self.gauge_canvas.pack(side=tk.LEFT, padx=5, pady=10)
+        # Vertical Gauge for Charge
+        self.gauge_figure = Figure(figsize=(2.5, 3), dpi=100)
+        self.gauge_ax = self.gauge_figure.add_subplot(111)
+        self.gauge_chart_canvas = FigureCanvasTkAgg(self.gauge_figure, self.prediction_sub_frame)
+        self.gauge_chart_canvas.get_tk_widget().pack(
+            side=tk.LEFT, padx=5, pady=5, fill=tk.BOTH, expand=False,
+        )
 
         # Interval Scatter Plot Chart
-        self.interval_figure = Figure(figsize=(4, 1), dpi=100)  # Reduced figure size
+        self.interval_figure = Figure(figsize=(3, 1), dpi=100) 
         self.interval_ax = self.interval_figure.add_subplot(111)
         self.interval_chart_canvas = FigureCanvasTkAgg(self.interval_figure, self.prediction_sub_frame)
         self.interval_chart_canvas.get_tk_widget().pack(
-            side=tk.RIGHT, padx=5, pady=10, fill=tk.BOTH, expand=False  # Added padding
+            side=tk.RIGHT, padx=5, pady=5, fill=tk.BOTH, expand=False 
         )
 
         # Configure row and column weights for dynamic resizing
@@ -275,16 +292,29 @@ class MillikanExperimentApp:
         self.video_container.grid_columnconfigure(1, weight=0)  # Controls frame
 
     def load_videos(self):
-        """Load video files from the directory into the Listbox."""
+        """Load video files from a user-selected directory into the Listbox."""
+        self.highlight_button(self.load_videos_button)
         self.video_listbox.delete(0, tk.END)
-        if not os.path.exists(self.video_directory):
-            os.makedirs(self.video_directory)
+
+        # Open a dialog for the user to select a folder
+        selected_directory = filedialog.askdirectory(title="Select Video Directory")
+        if not selected_directory:  # If the user cancels the dialog
+            return
+
+        self.video_directory = selected_directory
+
+        # List videos in the selected directory
         videos = [f for f in os.listdir(self.video_directory) if f.lower().endswith(('.mp4', '.avi', '.mov'))]
+        if not videos:
+            messagebox.showinfo("No Videos Found", "No video files were found in the selected directory.")
+            return
+
         for video in videos:
             self.video_listbox.insert(tk.END, video)
 
     def select_video(self):
         """Handle video selection from the Listbox."""
+        self.highlight_button(self.select_video_button)
         selected_index = self.video_listbox.curselection()
         if not selected_index:
             messagebox.showerror("Error", "No video selected.")
@@ -389,22 +419,23 @@ class MillikanExperimentApp:
         else:
             self.next_button.config(state=tk.NORMAL)
         
-
     def back_action(self):
         """Handle the Back button click."""
         if self.current_page > 0:
+            self.highlight_button(self.back_button)
             self.current_page -= 1
             self.update_page()
 
     def next_action(self):
         """Handle the Next button click."""
         if self.current_page < len(self.pages) - 1:
+            self.highlight_button(self.next_button)
             self.current_page += 1
             self.update_page()
             
     def add_visual_element(self):
         """Add an image to the instructions frame."""
-        image_path = "/Users/calebchristian/Desktop/WorkingMillikanCV/MillikanCVV1/media/millikanApparatus.png"
+        image_path = os.path.join('media', 'millikanApparatus.png')
         image = Image.open(image_path).resize((400, 300), Image.Resampling.LANCZOS)  # Resize image
         self.image_tk = ImageTk.PhotoImage(image)  # Keep a reference to avoid garbage collection
 
@@ -585,9 +616,12 @@ class MillikanExperimentApp:
         self.progress_bar['value'] = 0
         self.ax.clear()
         self.chart_canvas.draw()
-        self.gauge_canvas.delete("all")
+        self.gauge_ax.clear()
+        self.gauge_chart_canvas.draw()
         self.interval_ax.clear()
         self.interval_chart_canvas.draw()
+        self.placeholder_label.pack(fill=tk.BOTH, expand=True) 
+        self.prediction_sub_frame.pack_forget()  
 
     def on_mouse_down(self, event):
         self.start_x = event.x
@@ -618,14 +652,34 @@ class MillikanExperimentApp:
             self.slider = None  # Remove the reference to the slider
 
     def play_video(self):
-        self.video_canvas.delete("roi")
-        self.paused = False
-        self.update_video_frame()
+        if self.paused:
+            self.highlight_button(self.play_button)
+            self.video_canvas.delete("roi")
+            self.paused = False
+            self.update_video_frame()
+            self.play_button.config(state=tk.DISABLED)
+            self.pause_button.config(state=tk.ACTIVE)
+            self.forward_button.config(state=tk.DISABLED)
+            self.backward_button.config(state=tk.DISABLED)
+            self.fast_forward_button.config(state=tk.DISABLED)
+            self.fast_backward_button.config(state=tk.DISABLED)
 
     def pause_video(self):
-        self.paused = True
+        if not self.paused:
+            self.highlight_button(self.pause_button)
+            self.paused = True
+            self.play_button.config(state=tk.ACTIVE)
+            self.pause_button.config(state=tk.DISABLED)
+            self.forward_button.config(state=tk.ACTIVE)
+            self.backward_button.config(state=tk.ACTIVE)
+            self.fast_forward_button.config(state=tk.ACTIVE)
+            self.fast_backward_button.config(state=tk.ACTIVE)
 
     def update_video_frame(self):
+        if not self.bbox:
+            messagebox.showinfo("Missed Step","Must select an area on the video first.")
+            return
+
         if self.paused or not self.video.isOpened():
             return
 
@@ -639,10 +693,15 @@ class MillikanExperimentApp:
         ret, bbox = self.tracker.update(self.frame)
         if ret:
             self.bbox_history[self.current_frame] = bbox
-            self.save_yolo_format(self.current_frame, bbox, self.display_width, self.display_height, self.output_path)
+            self.batch_y_centers.append((self.current_frame, bbox[1] + bbox[3] / 2))
             p1 = (int(bbox[0]), int(bbox[1]))
             p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
             cv2.rectangle(self.frame, p1, p2, (255, 0, 0), 2, 1)
+
+        # Update the batch when batch size is reached
+        if len(self.batch_y_centers) >= self.batch_size:
+            self.process_batch_data()
+            self.batch_y_centers = [] 
 
         
         self.display_frame(self.frame)
@@ -653,45 +712,38 @@ class MillikanExperimentApp:
 
         self.root.after(10, self.update_video_frame)
 
-    def save_yolo_format(self, frame_num, bbox, img_width, img_height, base_output_path):
-        x_center = (bbox[0] + bbox[2] / 2) / img_width
-        y_center = (bbox[1] + bbox[3] / 2) / img_height
-        width = bbox[2] / img_width
-        height = bbox[3] / img_height
+    def process_batch_data(self):
+        """Process batch data using numpy for efficient computation."""
+        if len(self.batch_y_centers) == 0:
+            return
 
-        self.y_centers.append(y_center)
-
-        # output_path = os.path.join(base_output_path, f"{frame_num:06d}.txt")
-        # with open(output_path, 'w') as file:
-        #     file.write(f"0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}\n")
-
+        batch_array = np.array(self.batch_y_centers)
+        normalized_y_centers = batch_array[:, 1] / self.display_height
+        self.y_centers.extend(normalized_y_centers.tolist())
         self.update_chart()
+
 
     def update_chart(self):
         """Find and plot peaks and troughs in y-center data, ensuring the first and last data points are treated as specified."""
-        # Convert list to numpy array for processing
-        y = np.array(self.y_centers) * 512  # Scaling to pixel values
+        y = np.array(self.y_centers) * 512  # Scale to pixel values
         t = np.arange(len(self.y_centers))  # Time indices
 
-        # Finding peaks and troughs
+        # Use numpy functions to find peaks and troughs
         peaks, _ = find_peaks(y, distance=100, prominence=100)
         troughs, _ = find_peaks(-y, distance=100, prominence=100)
 
         # Enforce the first and last frame conditions
-        # First frame is always a min
         if 0 not in troughs:
             troughs = np.append([0], troughs)
-
-        # Last frame is opposite of the last detected peak or trough
         if len(peaks) > 0 and len(troughs) > 0:
-            if peaks[-1] > troughs[-1]:  # Last detected was a peak
+            if peaks[-1] > troughs[-1]:
                 if len(y) - 1 not in troughs:
                     troughs = np.append(troughs, [len(y) - 1])
-            else:  # Last detected was a trough
+            else:
                 if len(y) - 1 not in peaks:
                     peaks = np.append(peaks, [len(y) - 1])
 
-        # Create lists of tuples for peaks and troughs
+                            # Create lists of tuples for peaks and troughs
         peak_points = [(t[index], y[index]) for index in peaks]
         trough_points = [(t[index], y[index]) for index in troughs]
 
@@ -699,11 +751,7 @@ class MillikanExperimentApp:
             vu, vd = find_slopes(peak_points, trough_points)
             charge, interval = self.charge_calculator.find_charge_and_interval(vu, vd)
             self.update_prediction_display(charge, interval)
-            # self.prediction_label.config(
-            #     text=f"Charge Prediction:\nCharge: {charge:.5e} C\nInterval: {interval:.2f} e"
-            # )
         except ValueError as e:
-            # self.prediction_label.config(text=f"Error in calculation: {str(e)}")
             pass
 
         # Plotting
@@ -719,6 +767,7 @@ class MillikanExperimentApp:
         self.ax.legend()
         self.chart_canvas.draw()
 
+
     def display_frame(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img = Image.fromarray(frame)
@@ -731,6 +780,7 @@ class MillikanExperimentApp:
 
     def move_forward(self):
         if self.current_frame < self.total_frames - 1:
+            self.highlight_button(self.forward_button)
             self.current_frame += 1
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -745,6 +795,7 @@ class MillikanExperimentApp:
 
     def move_backward(self):
         if self.current_frame > 0:
+            self.highlight_button(self.backward_button)
             self.current_frame -= 1
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -759,6 +810,7 @@ class MillikanExperimentApp:
 
     def move_fast_forward(self):
         if self.current_frame < self.total_frames - 1:
+            self.highlight_button(self.fast_backward_button)
             self.current_frame += 10
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -773,6 +825,7 @@ class MillikanExperimentApp:
 
     def move_fast_backward(self):
         if self.current_frame > 0:
+            self.highlight_button(self.fast_backward_button)
             self.current_frame -= 10
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
@@ -785,12 +838,31 @@ class MillikanExperimentApp:
                     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
                 self.display_frame(frame)
 
+    def highlight_button(self, button):
+        # Reset all buttons to their default style
+        buttons = [
+            self.play_button,
+            self.pause_button,
+            self.forward_button,
+            self.backward_button,
+            self.fast_forward_button,
+            self.fast_backward_button,
+        ]
+        for btn in buttons:
+            btn.config(bg="SystemButtonFace", fg="black")  
+
+        # Highlight the selected button
+        button.config(bg="blue", fg="white")
+
+        self.root.after(150, lambda: button.config(bg="SystemButtonFace", fg="black"))
+
     def on_slider_update(self, value):
         if not self.slider:
             return 
         
         if self.video and not self.paused:  # Pause video if it's playing
             self.paused = True
+
         self.current_frame = int(value)
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
         ret, frame = self.video.read()
@@ -804,90 +876,91 @@ class MillikanExperimentApp:
             self.display_frame(frame)
 
     def update_prediction_display(self, charge, interval):
-        """Update the gauge and bar chart with new prediction values."""
+        """Update the gauge and bar chart with new prediction values or switch from placeholder."""
+        if not charge or not interval:
+            self.placeholder_label.pack(fill=tk.BOTH, expand=True)  
+            self.prediction_sub_frame.pack_forget()  
+            return  
+
+        self.placeholder_label.pack_forget()  
+        self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)  
+
+        # Update the gauge and interval chart
         self.update_gauge(charge)
         self.update_interval_chart(charge, interval)
 
     def update_gauge(self, charge):
-        """Update the circular gauge with tick marks and charge label."""
-        self.gauge_canvas.delete("all")
+        """Update the vertical gauge using matplotlib."""
         max_charge = 1e-18  # Adjust maximum for better scaling
         normalized_charge = min(charge / max_charge, 1.0)
 
-        center_x, center_y, radius = 100, 100, 80
-        start_angle = -90
-        end_angle = start_angle + normalized_charge * 360
+        # Clear the previous gauge
+        self.gauge_ax.clear()
 
-        # Draw the filled arc for the gauge
-        self.gauge_canvas.create_arc(
-            center_x - radius, center_y - radius,
-            center_x + radius, center_y + radius,
-            start=start_angle, extent=end_angle - start_angle,
-            fill="blue", outline="blue"
+        # Plot the vertical bar
+        self.gauge_ax.bar(
+            [0],  
+            [normalized_charge * max_charge],  
+            width=0.4, color="blue", edgecolor="black"
         )
 
-        # Draw the outer circle
-        self.gauge_canvas.create_oval(
-            center_x - radius, center_y - radius,
-            center_x + radius, center_y + radius,
-            outline="black"
+        # Add labels and formatting
+        self.gauge_ax.set_ylim(0, max_charge)  
+        self.gauge_ax.set_xlim(-1.0, 1.0)
+        self.gauge_ax.set_xticks([]) 
+        self.gauge_ax.set_ylabel("q = Charge (C)", fontsize=8)
+        self.gauge_ax.tick_params(axis="y", labelsize=8)
+        self.gauge_ax.grid(True, axis="y", linestyle="--", alpha=0.6)
+
+        # Set a title with the charge value
+        self.gauge_ax.set_title(
+            f"q = {charge:.2e} C", fontsize=10, color="blue", pad=15
         )
 
-        # Add tick marks
-        num_ticks = 10  # Number of ticks around the gauge
-        for i in range(num_ticks + 1):
-            tick_angle = start_angle + (360 / num_ticks) * i
-            rad_angle = np.radians(tick_angle)
+        # Adjust layout to ensure no clipping
+        self.gauge_figure.subplots_adjust(left=0.3, right=.95, top=0.8, bottom=0.1)
 
-            # Tick mark start and end points
-            x_start = center_x + (radius - 10) * cos(rad_angle)
-            y_start = center_y + (radius - 10) * sin(rad_angle)
-            x_end = center_x + radius * cos(rad_angle)
-            y_end = center_y + radius * sin(rad_angle)
-
-            # Draw tick marks
-            self.gauge_canvas.create_line(x_start, y_start, x_end, y_end, fill="black")
-
-            # Add labels at every other tick
-            if i % 2 == 0:
-                label_angle = np.radians(tick_angle)
-                label_x = center_x + (radius - 20) * cos(label_angle)
-                label_y = center_y + (radius - 20) * sin(label_angle)
-                tick_value = max_charge * (i / num_ticks)
-                self.gauge_canvas.create_text(
-                    label_x, label_y, text=f"{tick_value:.1e}", font=("Arial", 8)
-                )
-
-        # Display the charge value in the center of the gauge
-        self.gauge_canvas.create_text(
-            center_x, center_y,
-            text=f"{charge:.2e} C", font=("Arial", 12, "bold")
-        )
+        # Redraw the gauge
+        self.gauge_chart_canvas.draw()
 
     def update_interval_chart(self, charge, interval):
-        """Update the scatter plot for charge vs. interval."""
+        """Update the histogram for interval observations."""
         self.interval_ax.clear()
-        
-        # Add the new charge-interval pair to the list
-        if charge is not None:
-            self.charge_interval_pairs.append((charge, interval))
-        
-        # Prepare data for the scatter plot
-        charges = [pair[0] for pair in self.charge_interval_pairs]
-        intervals = [pair[1] for pair in self.charge_interval_pairs]
 
-        # Scatter plot for charge vs. interval
-        self.interval_ax.scatter(charges, intervals, color="blue", label="Data Points", s=20)  # Reduced point size
-        self.interval_ax.set_title("Charge vs. Interval", fontsize=10)  # Smaller title font
-        self.interval_ax.set_xlabel("Charge (C)", fontsize=8)  # Smaller label font
-        self.interval_ax.set_ylabel("Interval", fontsize=8)
+        if interval is not None:
+            self.charge_interval_pairs.append((charge, interval))
+
+        # Convert intervals to numpy array
+        intervals = np.array([pair[1] for pair in self.charge_interval_pairs])
+
+        # Calculate histogram bins and counts using numpy
+        bins = np.linspace(np.min(intervals), np.max(intervals), 11)
+        counts, edges = np.histogram(intervals, bins=bins)
+
+        # Calculate mean interval with numpy
+        mean_interval = np.mean(intervals)
+
+        # Plot histogram
+        self.interval_ax.bar(edges[:-1], counts, width=np.diff(edges), align="edge", color="blue", edgecolor="black", alpha=0.7)
+
+        # Add mean line
+        self.interval_ax.axvline(x=mean_interval, color="green", linestyle="--", linewidth=1)
+
+        # Set titles and labels
+        self.interval_ax.set_title("Histogram of Intervals", fontsize=10)
+        self.interval_ax.set_xlabel("Interval", fontsize=8)
+        self.interval_ax.set_ylabel("Count", fontsize=8)
         self.interval_ax.grid(True)
 
+        # Annotate the mean value
+        self.interval_ax.annotate(
+            f"q/e = Mean Interval: {mean_interval:.2f}",
+            xy=(0.5, 1.25), xycoords='axes fraction',
+            fontsize=10, color="green", ha="center"
+        )
+
         self.interval_figure.tight_layout()
-
-        # Adjust tick label sizes
         self.interval_ax.tick_params(axis='both', which='major', labelsize=8)
-
         self.interval_chart_canvas.draw()
 
 
