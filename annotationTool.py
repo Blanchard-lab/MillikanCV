@@ -500,7 +500,7 @@ class MillikanExperimentApp:
             self.fast_backward_button,
         ]
         for btn in buttons:
-            btn.config(bg="SystemButtonFace", fg="black")  # Default styles for buttons
+            btn.config(bg="SystemButtonFace", fg="black")  
 
         # Highlight the selected button
         button.config(bg="blue", fg="white")
@@ -513,6 +513,7 @@ class MillikanExperimentApp:
         
         if self.video and not self.paused:  # Pause video if it's playing
             self.paused = True
+
         self.current_frame = int(value)
         self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
         ret, frame = self.video.read()
@@ -549,15 +550,15 @@ class MillikanExperimentApp:
 
         # Plot the vertical bar
         self.gauge_ax.bar(
-            [0],  # Single bar at position 0
-            [normalized_charge * max_charge],  # Scaled charge value
+            [0],  
+            [normalized_charge * max_charge],  
             width=0.4, color="blue", edgecolor="black"
         )
 
         # Add labels and formatting
-        self.gauge_ax.set_ylim(0, max_charge)  # Set range for vertical bar
-        self.gauge_ax.set_xlim(-1.0, 1.0)  # Increase horizontal margin to avoid clipping
-        self.gauge_ax.set_xticks([])  # Remove X-axis ticks
+        self.gauge_ax.set_ylim(0, max_charge)  
+        self.gauge_ax.set_xlim(-1.0, 1.0)
+        self.gauge_ax.set_xticks([]) 
         self.gauge_ax.set_ylabel("Charge (C)", fontsize=8)
         self.gauge_ax.tick_params(axis="y", labelsize=8)
         self.gauge_ax.grid(True, axis="y", linestyle="--", alpha=0.6)
