@@ -623,6 +623,21 @@ class MillikanExperimentApp:
         self.placeholder_label.pack(fill=tk.BOTH, expand=True) 
         self.prediction_sub_frame.pack_forget()  
 
+        print('Reset Called')
+
+        if self.slider is None:
+
+            self.slider = tk.Scale(
+                self.video_container,
+                from_=0,
+                to=0,
+                orient=tk.HORIZONTAL,
+                length=self.display_width,
+                command=self.on_slider_update
+            )
+            self.slider.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+            
+
     def on_mouse_down(self, event):
         self.start_x = event.x
         self.start_y = event.y
@@ -649,7 +664,7 @@ class MillikanExperimentApp:
         if self.slider is not None:
             self.slider.pack_forget()
             self.slider.destroy()
-            self.slider = None  # Remove the reference to the slider
+            self.slider = None
 
     def play_video(self):
         if self.paused:
