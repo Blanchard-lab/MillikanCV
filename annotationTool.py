@@ -736,8 +736,6 @@ class MillikanExperimentApp:
         y = np.array(self.y_centers) * 512  # Scale to pixel values
         t = np.arange(len(self.y_centers))  # Time indices
 
-        # print('Y-Center Size: ', len(self.y_centers) )
-
         # Use numpy functions to find peaks and troughs
         peaks, _ = find_peaks(y, distance=100, prominence=100)
         troughs, _ = find_peaks(-y, distance=100, prominence=100)
@@ -972,8 +970,6 @@ class MillikanExperimentApp:
 
         if integer is not None:
             self.charge_integer_pairs.append((charge, integer))
-
-        # print('Integer Size:', len(self.charge_integer_pairs))
 
         # Convert integers to numpy array
         integers = np.array([pair[1] for pair in self.charge_integer_pairs])
