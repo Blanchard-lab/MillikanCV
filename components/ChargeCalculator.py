@@ -35,12 +35,12 @@ class ChargeCalculator:
         mass = top / bot
         return mass
 
-    def find_charge_and_interval(self, vu, vd):
+    def find_charge_and_integer(self, vu, vd):
         if vd <= 0 or vu <= 0:
             raise ValueError(f"\nInvalid velocities: \n\tvu={vu}, vd={vd}. \n\tBoth must be greater than 0.")
         viscosity_air = self.corrected_viscosity(vd)
         radius = self.find_radius(vd, viscosity_air)
         mass = self.find_mass(radius)
         charge = ((mass * self.a_gravity) + (6 * np.pi * viscosity_air * radius * vu)) / self.E
-        interval = charge / 1.602176634e-19  # Elementary charge
-        return charge, interval
+        integer = charge / 1.602176634e-19  # Elementary charge
+        return charge, integer

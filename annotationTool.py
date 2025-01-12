@@ -41,7 +41,7 @@ class MillikanExperimentApp:
         self.video_directory = "input" 
 
         self.y_centers = []
-        self.charge_interval_pairs = []
+        self.charge_integer_pairs = []
 
         # Batch size for updates
         self.batch_size = 50  # Update charts after every 20 frames
@@ -271,11 +271,11 @@ class MillikanExperimentApp:
             side=tk.LEFT, padx=5, pady=5, fill=tk.BOTH, expand=False,
         )
 
-        # Interval Scatter Plot Chart
-        self.interval_figure = Figure(figsize=(3, 1), dpi=100) 
-        self.interval_ax = self.interval_figure.add_subplot(111)
-        self.interval_chart_canvas = FigureCanvasTkAgg(self.interval_figure, self.prediction_sub_frame)
-        self.interval_chart_canvas.get_tk_widget().pack(
+        # Integer Scatter Plot Chart
+        self.integer_figure = Figure(figsize=(3, 1), dpi=100) 
+        self.integer_ax = self.integer_figure.add_subplot(111)
+        self.integer_chart_canvas = FigureCanvasTkAgg(self.integer_figure, self.prediction_sub_frame)
+        self.integer_chart_canvas.get_tk_widget().pack(
             side=tk.RIGHT, padx=5, pady=5, fill=tk.BOTH, expand=False 
         )
 
@@ -366,8 +366,6 @@ class MillikanExperimentApp:
         else:
             messagebox.showerror("Error", "Could not read the first frame of the video")
     
-    
-    ########################
     def update_page(self):
         """Update the instructions label and buttons based on the current page."""
         # Set the text for the current page
@@ -442,8 +440,7 @@ class MillikanExperimentApp:
         # Create a label for the image
         self.image_label = tk.Label(self.instructions_frame, image=self.image_tk, bg="white")
         self.image_label.grid(row=1, column=0, columnspan=2, pady=10, sticky="n")  # Center image horizontally
-   ##########
-   # Eq 1 
+
     def add_equation_widget(self):
         """Create the matplotlib figure to display a LaTeX equation, then hide it initially."""
         self.equation_figure = Figure(figsize=(3, 1), dpi=100) #(Width, Height)
@@ -474,7 +471,6 @@ class MillikanExperimentApp:
         )
         self.equation_canvas.draw()
         
-    # Eq 2
     def add_equation_widget2(self):
         """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
         self.equation_figure2 = Figure(figsize=(3, 1), dpi=100)
@@ -504,7 +500,6 @@ class MillikanExperimentApp:
         )
         self.equation_canvas2.draw() 
         
-    # Eq 3 
     def add_equation_widget3(self):
         """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
         self.equation_figure3 = Figure(figsize=(3, 1), dpi=100)
@@ -534,7 +529,6 @@ class MillikanExperimentApp:
         )
         self.equation_canvas3.draw() 
     
-    # Eq 4
     def add_equation_widget4(self):
         """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
         self.equation_figure4 = Figure(figsize=(3, 1), dpi=100)
@@ -564,7 +558,6 @@ class MillikanExperimentApp:
         )
         self.equation_canvas4.draw() 
     
-    # Eq 5
     def add_equation_widget5(self):
         """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
         self.equation_figure5 = Figure(figsize=(3, 1), dpi=100)
@@ -607,7 +600,8 @@ class MillikanExperimentApp:
         self.bbox = None
         self.bbox_history = {}
         self.y_centers = []
-        self.charge_interval_pairs = []
+        self.charge_integer_pairs = []
+        self.batch_y_centers = []
         self.paused = True
 
         # Reset UI components
@@ -618,8 +612,8 @@ class MillikanExperimentApp:
         self.chart_canvas.draw()
         self.gauge_ax.clear()
         self.gauge_chart_canvas.draw()
-        self.interval_ax.clear()
-        self.interval_chart_canvas.draw()
+        self.integer_ax.clear()
+        self.integer_chart_canvas.draw()
         self.placeholder_label.pack(fill=tk.BOTH, expand=True) 
         self.prediction_sub_frame.pack_forget()  
 
@@ -737,7 +731,6 @@ class MillikanExperimentApp:
         self.y_centers.extend(normalized_y_centers.tolist())
         self.update_chart()
 
-
     def update_chart(self):
         """Find and plot peaks and troughs in y-center data, ensuring the first and last data points are treated as specified."""
         y = np.array(self.y_centers) * 512  # Scale to pixel values
@@ -758,14 +751,14 @@ class MillikanExperimentApp:
                 if len(y) - 1 not in peaks:
                     peaks = np.append(peaks, [len(y) - 1])
 
-                            # Create lists of tuples for peaks and troughs
+        # Create lists of tuples for peaks and troughs
         peak_points = [(t[index], y[index]) for index in peaks]
         trough_points = [(t[index], y[index]) for index in troughs]
 
         try:
             vu, vd = find_slopes(peak_points, trough_points)
-            charge, interval = self.charge_calculator.find_charge_and_interval(vu, vd)
-            self.update_prediction_display(charge, interval)
+            charge, integer = self.charge_calculator.find_charge_and_integer(vu, vd)
+            self.update_prediction_display(charge, integer)
         except ValueError as e:
             pass
 
@@ -781,7 +774,6 @@ class MillikanExperimentApp:
         self.ax.invert_yaxis()
         self.ax.legend()
         self.chart_canvas.draw()
-
 
     def display_frame(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -822,6 +814,22 @@ class MillikanExperimentApp:
                     p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
                     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
                 self.display_frame(frame)
+                
+                # Handle data removal
+                if len(self.batch_y_centers) > 0:
+                    # Remove the last element from the batch
+                    self.batch_y_centers.pop()
+                elif len(self.y_centers) > 0:
+                    # Remove from y_centers if batch is empty
+                    self.y_centers.pop()
+                    # Remove from charge_interval_pairs only if we've gone backward by more than a batch
+                    if self.current_frame % self.batch_size == 0 and len(self.charge_integer_pairs) > 0:
+                        self.charge_integer_pairs.pop()
+                
+                # Update bbox history
+                if self.current_frame in self.bbox_history:
+                    del self.bbox_history[self.current_frame]
+
 
     def move_fast_forward(self):
         if self.current_frame < self.total_frames - 1:
@@ -841,7 +849,8 @@ class MillikanExperimentApp:
     def move_fast_backward(self):
         if self.current_frame > 0:
             self.highlight_button(self.fast_backward_button)
-            self.current_frame -= 10
+            frames_to_skip = 10  # Define how many frames to skip backward
+            self.current_frame = max(0, self.current_frame - frames_to_skip)
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
             ret, frame = self.video.read()
             if ret:
@@ -852,6 +861,23 @@ class MillikanExperimentApp:
                     p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
                     cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
                 self.display_frame(frame)
+            
+            # Handle data removal
+            for _ in range(frames_to_skip):
+                if len(self.batch_y_centers) > 0:
+                    # Remove the last element from the batch
+                    self.batch_y_centers.pop()
+                elif len(self.y_centers) > 0:
+                    # Remove from y_centers if batch is empty
+                    self.y_centers.pop()
+                    # Remove from charge_interval_pairs if backward movement crosses batch boundaries
+                    if self.current_frame % self.batch_size == 0 and len(self.charge_integer_pairs) > 0:
+                        self.charge_integer_pairs.pop()
+            
+            # Update bbox history
+            for frame_idx in range(self.current_frame, self.current_frame + frames_to_skip):
+                if frame_idx in self.bbox_history:
+                    del self.bbox_history[frame_idx]
 
     def highlight_button(self, button):
         # Reset all buttons to their default style
@@ -890,9 +916,9 @@ class MillikanExperimentApp:
                 cv2.rectangle(frame, p1, p2, (255, 0, 0), 2, 1)
             self.display_frame(frame)
 
-    def update_prediction_display(self, charge, interval):
+    def update_prediction_display(self, charge, integer):
         """Update the gauge and bar chart with new prediction values or switch from placeholder."""
-        if not charge or not interval:
+        if not charge or not integer:
             self.placeholder_label.pack(fill=tk.BOTH, expand=True)  
             self.prediction_sub_frame.pack_forget()  
             return  
@@ -900,9 +926,9 @@ class MillikanExperimentApp:
         self.placeholder_label.pack_forget()  
         self.prediction_sub_frame.pack(fill=tk.BOTH, expand=True)  
 
-        # Update the gauge and interval chart
+        # Update the gauge and integer chart
         self.update_gauge(charge)
-        self.update_interval_chart(charge, interval)
+        self.update_integer_chart(charge, integer)
 
     def update_gauge(self, charge):
         """Update the vertical gauge using matplotlib."""
@@ -938,45 +964,45 @@ class MillikanExperimentApp:
         # Redraw the gauge
         self.gauge_chart_canvas.draw()
 
-    def update_interval_chart(self, charge, interval):
-        """Update the histogram for interval observations."""
-        self.interval_ax.clear()
+    def update_integer_chart(self, charge, integer):
+        """Update the histogram for integer observations."""
+        self.integer_ax.clear()
 
-        if interval is not None:
-            self.charge_interval_pairs.append((charge, interval))
+        if integer is not None:
+            self.charge_integer_pairs.append((charge, integer))
 
-        # Convert intervals to numpy array
-        intervals = np.array([pair[1] for pair in self.charge_interval_pairs])
+        # Convert integers to numpy array
+        integers = np.array([pair[1] for pair in self.charge_integer_pairs])
 
         # Calculate histogram bins and counts using numpy
-        bins = np.linspace(np.min(intervals), np.max(intervals), 11)
-        counts, edges = np.histogram(intervals, bins=bins)
+        bins = np.linspace(np.min(integers), np.max(integers), 11)
+        counts, edges = np.histogram(integers, bins=bins)
 
-        # Calculate mean interval with numpy
-        mean_interval = np.mean(intervals)
+        # Calculate mean integer with numpy
+        mean_integer = np.mean(integers)
 
         # Plot histogram
-        self.interval_ax.bar(edges[:-1], counts, width=np.diff(edges), align="edge", color="blue", edgecolor="black", alpha=0.7)
+        self.integer_ax.bar(edges[:-1], counts, width=np.diff(edges), align="edge", color="blue", edgecolor="black", alpha=0.7)
 
         # Add mean line
-        self.interval_ax.axvline(x=mean_interval, color="green", linestyle="--", linewidth=1)
+        self.integer_ax.axvline(x=mean_integer, color="green", linestyle="--", linewidth=1)
 
         # Set titles and labels
-        self.interval_ax.set_title("Histogram of Intervals", fontsize=10)
-        self.interval_ax.set_xlabel("Interval", fontsize=8)
-        self.interval_ax.set_ylabel("Count", fontsize=8)
-        self.interval_ax.grid(True)
+        self.integer_ax.set_title("Histogram of Integers", fontsize=10)
+        self.integer_ax.set_xlabel("q/e = Integer", fontsize=8)
+        self.integer_ax.set_ylabel("Count", fontsize=8)
+        self.integer_ax.grid(True)
 
         # Annotate the mean value
-        self.interval_ax.annotate(
-            f"q/e = Mean Interval: {mean_interval:.2f}",
+        self.integer_ax.annotate(
+            f"Mean Integer: {mean_integer:.2f}",
             xy=(0.5, 1.25), xycoords='axes fraction',
             fontsize=10, color="green", ha="center"
         )
 
-        self.interval_figure.tight_layout()
-        self.interval_ax.tick_params(axis='both', which='major', labelsize=8)
-        self.interval_chart_canvas.draw()
+        self.integer_figure.tight_layout()
+        self.integer_ax.tick_params(axis='both', which='major', labelsize=8)
+        self.integer_chart_canvas.draw()
 
 
 if __name__ == "__main__":
