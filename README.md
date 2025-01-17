@@ -1,13 +1,5 @@
 # MillikanCVV1
 
-This work evaluates the integration of computer vision into the Millikan oil-drop experiment—an experiment that played a pivotal role in R.A. Millikan’s receipt of the Nobel Prize in Physics in 1923 [[1]](#1)—and introduces a minimally viable user interface to assess its impact on usability in an educational context.
-
-Millikan’s experiment involved observing tiny oil droplets suspended in a chamber between two electrically charged plates. Using a microscope, he measured the velocity of the droplets as they fell under gravity and as they rose in response to an electric field. By varying the electric field and observing changes in the droplets’ motion, he was able to determine their charge. He accounted for factors such as air viscosity, drop density, and the effects of small drop size using corrections to Stokes's law. Millikan controlled the experimental conditions to eliminate errors from convection currents and pressure variations. This precise approach allowed him to determine that the charges on the oil droplets were multiples of a fundamental unit, confirming the quantized nature of electric charge [[2]](#2).
-
-For over six decades, the Millikan oil-drop experiment has been a cornerstone in the pedagogy and practice of experimental physics, serving as a critical tool for illustrating the quantization of electric charge and the measurement of fundamental physical constants [[2]](#2), [[3]](#3), [[4]](#4), [[5]](#5). 
-Despite its enduring significance, the traditional execution of this experiment in academic laboratories remains encumbered by inefficiencies [[6]](#6), [[7]](#7), [[8]](#8), [[9]](#9), [[10]](#10), [[11]](#11). These inefficiencies largely stem from the reliance on antiquated software and the necessity for manual data recording and processing, typically involving the laborious entry of observational data into basic spreadsheet programs \cite{making_it_worthwhile}. This technological lag not only hampers the accurate and efficient execution of academic experiments but also deprives students of an immersive engagement \cite{making_it_worthwhile}, with what has been lauded as one of the most elegant and profound demonstrations in the realm of physical sciences. 
-
-To address this challenge, we propose an updated methodology that combines modern computer vision algorithms with a minimally viable user interface designed to enhance usability. 
 
 # Requirements
 
