@@ -44,7 +44,7 @@ class MillikanExperimentApp:
         self.charge_integer_pairs = []
 
         # Batch size for updates
-        self.batch_size = 50  # Update charts after every 20 frames
+        self.batch_size = 50
         self.batch_y_centers = []
 
         # GUI Layout
@@ -146,6 +146,7 @@ class MillikanExperimentApp:
         ###########################
         # Add visual element (Image)
         self.add_visual_element()
+        self.add_visual_element2()
         # Add eq 1
         self.add_equation_widget()
         # Add eq 2 
@@ -168,60 +169,59 @@ class MillikanExperimentApp:
         
         # Page content
         self.pages = [
-            "Welcome! This application is designed to facilitate the prediction of electrical charge.\n\n"
-            "This experiment was originally conducted by Robert A. Millikan in 1909. The Millikan Oil Drop\n "
-            "Experiment is a classic physics experiment designed to measure the charge of an electron.\n "
-            "Millikan achieved this by suspending tiny charged oil droplets in an electric field and\n "
-            "analyzing their motion.\n\n"
-            "Illustrated below is an example of the apparatus used by Millikan to suspend microscopic oil droplets. The motion of these droplets could be carefully controlled, allowing them to rise under the influence of an electric field or fall due to the force of gravity.\n\n"
-            "Oil droplets are sprayed into a chamber between two closely spaced horizontal plates. These plates are insulated and connected to a voltage source. A potential difference across the plates creates an electric field, which can balance the downward force of gravity on the charged droplets, holding them stationary.\n\n"
+            "Welcome! This application is designed to help predict the electrical charge of particles.\n\n"
+            "In 1909, Robert A. Millikan conducted the famous Oil Drop Experiment, a groundbreaking study that measured the charge of an electron. Millikan achieved this by suspending tiny, charged oil droplets in an electric field and analyzing their motion.\n\n"
+            "The diagram below shows an apparatus similar to the one used by Millikan. By carefully controlling the electric field, he was able to make the droplets rise, fall, or remain stationary depending on the balance of forces acting on them.\n\n"
+            "Oil droplets are sprayed into a chamber between two closely spaced horizontal plates. These plates, connected to a voltage source, create an electric field. This field can counteract the force of gravity, allowing the charged droplets to be held in place for analysis.\n\n"
             "Click the Next button to Continue.",
             
             "These tiny oil-dropleps viewed through a microscope are under the influence different forces when rising or falling.\n\n"
             "1) Forces Acting on the droplet. \n\n"
             "When the droplet is falling, the forces acting on it can be balanced as follows: \n\n\n\n\n\n\n\n"
             "Where: V(t) is the terminal velocity of the falling droplet, r is the radius of the droplet, η is the viscosity of air, ρ oil density of the oil, ρ air is the density of the air, and g is gravity.\n\n"
-            "The radius of the droplet is calculated using: \n\n\n\n\n\n\n\n\n"
+            "The radius of the droplet is calculated using: \n\n\n\n\n\n\n\n\n\n\n\n"
             "Click the Next button to Continue.",
             
             "2) Forces During the Droplets Ascent\n\n"
             "When the droplet rises under the influence of the electric field, the forces balance differently. The electric force must overcome both gravity and drag: \n\n\n\n\n\n\n"
-            "Where: V(r) is the rising velocity of the droplet, and E is the electric field strength.\n\n"
+            "Where: V(u) is the rising velocity of the droplet, and E is the electric field strength.\n\n"
             
             
             "Using the relationship E = V / d, this becomes:\n\n\n\n\n\n\n\n\n"
             "From this, the charge q is determined:\n\n\n\n\n\n\n\n\n"
             "Click the Next button to Continue.",
             
+            "R.A. Millikan measured the charge (q) of many different particles. As he plotted this data, he noticed something interesting…\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            "Millikan observed that the difference in electric charge between individual particles was consistently a multiple of a specific fundamental value, suggesting that electric charge is quantized.\n\n"
+            "Millikan determined that electrons carry a discrete, fundamental unit of electric charge, which he measured as e ≈ 1.602e-19. This discovery confirmed that electric charge is quantized.\n\n"
+            "Click the Next button to Continue.",
+            
             "Computing Electrical Charge.\n\n"
-            "As noted by the final equation, there are many variables to be accounted for in order to calculate q, the charge of an oil-droplet in Coulombs.\n\n"
-            "Given that this application is meant to be used with the MillikanCV dataset, we have all the variables needed to compute electrical charge.\n\n"
+            "As noted in the final equation, several variables must be considered to calculate  q , the charge of an oil droplet in Coulombs.\n\n"
+            "This application is designed to work with the MillikanCV dataset, providing nearly all the variables required to calculate the electrical charge: \n"
             "Voltage (V) = 500 volts\n\n"
-            "Distance (d) = 4.902 mm \n\n"
+            "Distance (d) = 4.902e-3 m \n"
+            "Viscosity of air (η) = 1.81801e-5 Pas\n\n"
+            "Density of oil (ρₒᵢₗ) = 0.861e3 kg/m³\n\n"
+            "Density of air (ρₐᵢᵣ) = 1.01 kg/m³\n\n"
+            "Upward Velocity (vᵤ) = ?\n\n"
+            "Terminal Velocity (vₐ) = ?\n\n"
+            "As shown above, we have all the necessary variables to calculate the electrical charge of a particle, except for the upward velocity (when the particle is rising due to electric charge) and the terminal velocity (when the particle is falling due to gravity).\n\n"
+            "That's where you come in!\n\n\n\n\n\n\n"
+            "Click the Next button to Continue.",
             
-            
-            
-            
-            
-            
-            
-            "As part of this application, the developers have compiled a dataset of over a hundred videos capturing particles first falling under the influence of gravity and then rising due to an applied voltage.\n\n"
-            "These videos can be analyzed using this application to accurately predict the charge of the particle under observation!\n\n"
-    
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+            "General Instructions.\n\n"
+            "This application is designed to help students accurately find the upward velocity (vᵤ) and Terminal Velocity (vₐ) of oil droplets using the MillikanCV dataset. \n"
+            "By tracking a particle’s motion in the video, the application calculates the electrical charge (q) of the droplet. Follow the steps below to analyze the videos and record the results.\n\n"
+            "Lets begin: \n"
+            "Step 1:Click the ‘Load Videos’ button in the left-hand corner. If the videos do not appear in the list immediately, navigate to the folder containing the MillikanCV videos and load them.\n\n"
+            "Step 2: Select a video from the list by clicking on it, then click the ‘Select Video’ button.\n\n"
+            "Step 3: Use the slider below the video to play it and locate the particle you wish to track. Identify the particle that remains in the frame for the entire video duration, moving up and down consistently.\n\n"
+            "Step 4: Once the particle is identified, click and drag the cursor to draw a bounding box around it.\n\n"
+            "Step 5: Press the ‘Play’ button to start tracking the particle. The bounding box should follow the particle.\n\n"
+            "Step 6: Observe the particle’s motion as it falls and rises. A graph will display the Y-coordinate of the particle over time. Once sufficient data is collected, the charge (q) will be displayed in the bottom-right corner.\n\n"
+            "Step 7: Wait for the video to complete. The progress bar at the top of the application indicates the video’s duration.\n\n"
+            "Step 8: Record the video name, the displayed charge (q), and the value q/e shown below. Round q/e to the nearest integer.\n\n"
         ]
 
         # Initialize the first page
@@ -377,6 +377,11 @@ class MillikanExperimentApp:
         else:
             self.image_label.grid_remove()  # Hide the image on other pages
         
+        if self.current_page == 3:
+            self.image_label2.grid()  # Show the image on the first page
+        else:
+            self.image_label2.grid_remove()  # Hide the image on other pages
+        
         # Show/hide equation
         if self.current_page == 1: 
             # Example: On page 1, display the equation
@@ -390,13 +395,13 @@ class MillikanExperimentApp:
             self.equation_widget2.grid_remove()
         
         if self.current_page == 2:
-            self.set_equation_text3(r"$q \cdot E = 6 \pi \eta r v_r + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
+            self.set_equation_text3(r"$q \cdot E = 6 \pi \eta r v_u + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
             self.equation_widget3.grid()
             
-            self.set_equation_text4(r"$q \cdot \frac{V}{d} = 6 \pi \eta r v_r + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
+            self.set_equation_text4(r"$q \cdot \frac{V}{d} = 6 \pi \eta r v_u + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g$")
             self.equation_widget4.grid()
             
-            self.set_equation_text5(r"$q = \frac{6 \pi \eta r v_r + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g}{\left(\frac{V}{d}\right)}$")
+            self.set_equation_text5(r"$q = \frac{6 \pi \eta r v_u + \frac{4}{3} \pi r^3 (\rho_{\text{oil}} - \rho_{\text{air}}) \cdot g}{\left(\frac{V}{d}\right)}$")
             self.equation_widget5.grid()
             
         else:
@@ -440,6 +445,18 @@ class MillikanExperimentApp:
         # Create a label for the image
         self.image_label = tk.Label(self.instructions_frame, image=self.image_tk, bg="white")
         self.image_label.grid(row=1, column=0, columnspan=2, pady=10, sticky="n")  # Center image horizontally
+        
+    def add_visual_element2(self):
+        """Add a second image to the instructions frame."""
+        image_path = os.path.join('media', 'Charge_vs_Integer_Multiple.png')
+        image2 = Image.open(image_path).resize((500, 400), Image.Resampling.LANCZOS)  # Resize image
+        self.image_tk2 = ImageTk.PhotoImage(image2)  # Keep a separate reference to avoid garbage collection
+
+        # Create a label for the second image
+        self.image_label2 = tk.Label(self.instructions_frame, image=self.image_tk2, bg="white")
+        self.image_label2.grid(row=0, column=0, columnspan=2, pady=(60, 80), sticky="n")  # Position it in a new row
+        
+        
 
     def add_equation_widget(self):
         """Create the matplotlib figure to display a LaTeX equation, then hide it initially."""
@@ -502,7 +519,7 @@ class MillikanExperimentApp:
         
     def add_equation_widget3(self):
         """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
-        self.equation_figure3 = Figure(figsize=(3, 1), dpi=100)
+        self.equation_figure3 = Figure(figsize=(5, 1), dpi=100)
         self.equation_ax3 = self.equation_figure3.add_subplot(111)
         self.equation_ax3.axis('off')  # Hide axes for a cleaner look
 
@@ -531,7 +548,7 @@ class MillikanExperimentApp:
     
     def add_equation_widget4(self):
         """Create a second matplotlib figure to display another LaTeX equation, then hide it initially."""
-        self.equation_figure4 = Figure(figsize=(3, 1), dpi=100)
+        self.equation_figure4 = Figure(figsize=(5, 1), dpi=100)
         self.equation_ax4 = self.equation_figure4.add_subplot(111)
         self.equation_ax4.axis('off')  # Hide axes for a cleaner look
 
@@ -540,7 +557,7 @@ class MillikanExperimentApp:
         
         # Position in the grid but hide for now
         # Adjust row/column to your liking (e.g., row=2 or row=3)
-        self.equation_widget4.grid(row=0, column=0, columnspan=2, pady=(250, 100), sticky="n")
+        self.equation_widget4.grid(row=0, column=0, columnspan=2, pady=(250, 200), sticky="n")
         self.equation_widget4.grid_remove()  # Hide initially
     
     def set_equation_text4(self, latex_equation: str):
@@ -586,7 +603,6 @@ class MillikanExperimentApp:
             transform=self.equation_ax5.transAxes
         )
         self.equation_canvas5.draw() 
-        ######################
     
     def reset_states(self):
         """Reset all states to their initial values."""
@@ -615,7 +631,8 @@ class MillikanExperimentApp:
         self.integer_ax.clear()
         self.integer_chart_canvas.draw()
         self.placeholder_label.pack(fill=tk.BOTH, expand=True) 
-        self.prediction_sub_frame.pack_forget()  
+        self.prediction_sub_frame.pack_forget()
+    
 
         print('Reset Called')
 
@@ -978,14 +995,15 @@ class MillikanExperimentApp:
         bins = np.linspace(np.min(integers), np.max(integers), 11)
         counts, edges = np.histogram(integers, bins=bins)
 
-        # Calculate mean integer with numpy
-        mean_integer = np.mean(integers)
+        # Find the bin with the highest count (mode bin)
+        max_count_index = np.argmax(counts)
+        mode_bin = (edges[max_count_index] + edges[max_count_index + 1]) / 2  # Calculate bin center
 
         # Plot histogram
         self.integer_ax.bar(edges[:-1], counts, width=np.diff(edges), align="edge", color="blue", edgecolor="black", alpha=0.7)
 
-        # Add mean line
-        self.integer_ax.axvline(x=mean_integer, color="green", linestyle="--", linewidth=1)
+        # Add line for the mode bin
+        self.integer_ax.axvline(x=mode_bin, color="red", linestyle="--", linewidth=1)
 
         # Set titles and labels
         self.integer_ax.set_title("Histogram of Integers", fontsize=10)
@@ -993,11 +1011,11 @@ class MillikanExperimentApp:
         self.integer_ax.set_ylabel("Count", fontsize=8)
         self.integer_ax.grid(True)
 
-        # Annotate the mean value
+        # Annotate the mode bin
         self.integer_ax.annotate(
-            f"Mean Integer: {mean_integer:.2f}",
+            f"Electron Count: {round(mode_bin)}",
             xy=(0.5, 1.25), xycoords='axes fraction',
-            fontsize=10, color="green", ha="center"
+            fontsize=10, color="red", ha="center"
         )
 
         self.integer_figure.tight_layout()
