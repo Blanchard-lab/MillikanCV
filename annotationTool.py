@@ -44,7 +44,7 @@ class MillikanExperimentApp:
         self.charge_integer_pairs = []
 
         # Batch size for updates
-        self.batch_size = 5
+        self.batch_size = 50
         self.batch_y_centers = []
 
         # GUI Layout
@@ -995,14 +995,15 @@ class MillikanExperimentApp:
         bins = np.linspace(np.min(integers), np.max(integers), 11)
         counts, edges = np.histogram(integers, bins=bins)
 
-        # Calculate mean integer with numpy
-        mean_integer = np.mean(integers)
+        # Find the bin with the highest count (mode bin)
+        max_count_index = np.argmax(counts)
+        mode_bin = (edges[max_count_index] + edges[max_count_index + 1]) / 2  # Calculate bin center
 
         # Plot histogram
         self.integer_ax.bar(edges[:-1], counts, width=np.diff(edges), align="edge", color="blue", edgecolor="black", alpha=0.7)
 
-        # Add mean line
-        self.integer_ax.axvline(x=mean_integer, color="green", linestyle="--", linewidth=1)
+        # Add line for the mode bin
+        self.integer_ax.axvline(x=mode_bin, color="red", linestyle="--", linewidth=1)
 
         # Set titles and labels
         self.integer_ax.set_title("Histogram of Integers", fontsize=10)
@@ -1010,11 +1011,11 @@ class MillikanExperimentApp:
         self.integer_ax.set_ylabel("Count", fontsize=8)
         self.integer_ax.grid(True)
 
-        # Annotate the mean value
+        # Annotate the mode bin
         self.integer_ax.annotate(
-            f"Mean Integer: {mean_integer:.2f}",
+            f"Electron Count: {round(mode_bin)}",
             xy=(0.5, 1.25), xycoords='axes fraction',
-            fontsize=10, color="green", ha="center"
+            fontsize=10, color="red", ha="center"
         )
 
         self.integer_figure.tight_layout()
