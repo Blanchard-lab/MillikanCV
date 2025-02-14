@@ -7,13 +7,19 @@
 
 # Steps
 
-1. Create Environment
+1. Download the MillikanCV dataset from Kaggle:
+   
+```sh
+https://www.kaggle.com/datasets/calebchristian/millikancv
+```
+
+3. Create Environment
 
 ```sh
 python -m venv venv
 ```
 
-2. Source Virtual Environment
+3. Source Virtual Environment
 
 
 ```sh
@@ -28,12 +34,12 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-3. Install Requirements
+4. Install Requirements
 ```sh
 pip install -r requirements.txt
 ```
 
-4. Run Tool
+5. Run Tool
 
 ```sh
 python annotationTool.py
