@@ -2,6 +2,11 @@
 
 <img width="1727" alt="MillikanUI" src="https://github.com/user-attachments/assets/7c3f01b7-6dcb-40a8-a184-327c3300117b" />
 
+# About 
+Educational laboratories have long been the foundation for teaching core scientific principles, particularly in the natural sciences. Among these, the Millikan Oil-Drop Experiment holds a unique position as a crucial exercise in undergraduate physics education, recognized for its precise measurement of the elementary electric charge—a feat that earned Robert A. Millikan the Nobel Prize in 1913. Despite its historical significance, the execution of this experiment in modern academic settings remains rooted in outdated methodologies. These limitations reduce usability, increase the risk of errors, consume significant time, and require monetary investment.
+
+To increase usability, efficiency, and access while reduceing error rate, we developed M.A.S.E - Millikan Automated System for Education.  
+
 # Requirements
 
 **Python 3.12.1**
