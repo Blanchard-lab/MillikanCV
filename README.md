@@ -5,7 +5,7 @@
 # About 
 Educational laboratories have long been the foundation for teaching core scientific principles, particularly in the natural sciences. Among these, the Millikan Oil-Drop Experiment holds a unique position as a crucial exercise in undergraduate physics education, recognized for its precise measurement of the elementary electric charge—a feat that earned Robert A. Millikan the Nobel Prize in 1913. Despite its historical significance, the execution of this experiment in modern academic settings remains rooted in outdated methodologies. These limitations reduce usability, increase the risk of errors, consume significant time, and require monetary investment.
 
-To increase usability, efficiency, and access while reduceing error rate, we developed M.A.S.E - Millikan Automated System for Education.  
+To increase usability, efficiency, and access while reduceing error rate, we developed M.A.S.E. - Millikan Automated System for Education. The M.A.S.E. application, illustrated above, is a graphical user interface designed to facilitate the analysis of oil-droplet motion in the context of the Millikan oil-drop experiment. The interface provides a structured layout that integrates video playback, real-time data tracking, and educational resources into a cohesive tool.   
 
 # Requirements
 
