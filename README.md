@@ -1,5 +1,6 @@
 # MillikanCVV1
 
+<img width="1727" alt="MillikanUI" src="https://github.com/user-attachments/assets/7c3f01b7-6dcb-40a8-a184-327c3300117b" />
 
 # Requirements
 
